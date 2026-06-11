@@ -24,27 +24,36 @@ FetchContent_Declare(
 )
 FetchContent_MakeAvailable(vma)
 
-# include(FetchContent) FetchContent_Declare( cglm SOURCE_DIR
-# ${CMAKE_CURRENT_SOURCE_DIR}/extern/cglm/ # SOURCE_SUBDIR "" #
-# DOWNLOAD_EXTRACT_TIMESTAMP ON URL
-# https://github.com/recp/cglm/archive/refs/tags/v0.9.6.tar.gz)
-# FetchContent_MakeAvailable(cglm)
+if(NOT EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/extern/rxi_log/)
+  FetchContent_Declare(
+    rxi_log
+    DOWNLOAD_EXTRACT_TIMESTAMP ON #
+    SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/extern/rxi_log/ #
+    SUBDIR_SOURCE ""
+    URL https://github.com/rxi/log.c/archive/refs/heads/master.zip #
+  )
+endif()
 
 if(ANDROID)
   add_library(${APP} SHARED)
 
   set(APP_RESOURCES_SOURCE_DIR "")
-  set(APP_RESOURCES_SHADERS_SOURCE_DIR "${APP_RESOURCES_SOURCE_DIR}/shaders")
   set(APP_ASSETS_SOURCE_DIR "")
 else()
   add_executable(${APP})
 
   set(APP_RESOURCES_SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/src/main/res")
-  set(APP_RESOURCES_SHADERS_SOURCE_DIR "${APP_RESOURCES_SOURCE_DIR}/shaders")
   set(APP_ASSETS_SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/src/main/assets")
 
   find_program(GLSLANG_VALIDATOR_EXE NAMES glslangValidator)
+  find_program(TOKTX_EXE NAMES toktx)
 endif()
+
+set(APP_RESOURCES_SHADERS_SOURCE_DIR "${APP_RESOURCES_SOURCE_DIR}/shaders")
+set(APP_RESOURCES_TEXTURES_SOURCE_DIR "${APP_RESOURCES_SOURCE_DIR}/drawables")
+
+set(APP_ASSETS_TEXTURES_SOURCE_DIR "${APP_ASSETS_SOURCE_DIR}/drawables")
+set(APP_ASSETS_SHADERS_SOURCE_DIR "${APP_ASSETS_SOURCE_DIR}/shaders")
 
 set_target_properties(
   ${APP}
@@ -121,3 +130,41 @@ endforeach()
 add_custom_target(${APP}-compile-shaders ALL DEPENDS ${APP_SHADER_TARGETS})
 
 add_dependencies(${APP}-run ${APP}-compile-shaders)
+
+# ASSETS MANAGER
+set(APP_RESOURCES_TEXTURES_DIRS "1920x1080" "1024x1024")
+set(APP_ASSETS_TEXTURES_OUTPUT_NAMES "textures1920x1080.ktx2"
+                                     "textures1024x1024.ktx2")
+
+list(LENGTH APP_RESOURCES_TEXTURES_DIRS COUNT)
+math(EXPR COUNT_MINUS_ONE "${COUNT} - 1")
+
+# TEXTURES BUNDLER
+foreach(i RANGE ${COUNT_MINUS_ONE})
+  list(GET APP_RESOURCES_TEXTURES_DIRS ${i} TEXTURES_DIR)
+  list(GET APP_ASSETS_TEXTURES_OUTPUT_NAMES ${i} OUTPUT_NAME)
+
+  set(SRC_DIR ${APP_RESOURCES_TEXTURES_SOURCE_DIR}/${TEXTURES_DIR})
+  set(OUT_FILE ${APP_ASSETS_TEXTURES_SOURCE_DIR}/main/${OUTPUT_NAME})
+
+  file(GLOB PNG_FILES CONFIGURE_DEPENDS ${SRC_DIR}/*.png)
+  list(LENGTH PNG_FILES TEXTURES_COUNT)
+
+  message(STATUS "[${APP}] TEXTURES SRC: ${SRC_DIR}")
+
+  # --target_type array # --layers ${TEXTURES_COUNT} #
+  add_custom_command(
+    OUTPUT ${OUT_FILE} #
+    COMMAND ${CMAKE_COMMAND} -E make_directory
+            ${APP_ASSETS_TEXTURES_SOURCE_DIR}/main/
+    COMMAND ${TOKTX_EXE} --t2 --genmipmap --encode uastc --layers ${TEXTURES_COUNT} #
+            -- "${OUT_FILE}" ${PNG_FILES} #
+    DEPENDS ${PNG_FILES}
+    COMMENT "[${APP}] Bundling textures from ${TEX_DIR}/ into ${OUT_FILE}"
+    VERBATIM)
+
+  list(APPEND KTX_TARGETS "${OUT_FILE}")
+
+endforeach()
+
+add_custom_target(${APP}-bundle-textures ALL DEPENDS ${KTX_TARGETS})

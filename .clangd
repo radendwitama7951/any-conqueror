@@ -1,0 +1,8 @@
+
+SemanticTokens:
+  DisabledKinds: [InactiveCode]
+
+
+CompileFlags:
+  # CompilationDatabase: "./build-android/android-arm64/"
+  CompilationDatabase: "build"

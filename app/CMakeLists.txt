@@ -24,6 +24,13 @@ FetchContent_Declare(
 )
 FetchContent_MakeAvailable(vma)
 
+include(FetchContent)
+FetchContent_Declare(
+  ktx_linux_x86_64
+  URL https://github.com/KhronosGroup/KTX-Software/releases/download/v4.4.2/KTX-Software-4.4.2-Linux-x86_64.tar.bz2
+  URL_HASH SHA256=a8781bad05f9624edbf910b7f258cd0a4ba7d3e63b49ecc0a0ab440bf6a0a245)
+FetchContent_MakeAvailable(ktx_linux_x86_64)
+
 if(NOT EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/extern/rxi_log/)
   FetchContent_Declare(
     rxi_log
@@ -47,6 +54,7 @@ else()
 
   find_program(GLSLANG_VALIDATOR_EXE NAMES glslangValidator)
   find_program(TOKTX_EXE NAMES toktx)
+  find_program(KTXINFO_EXE NAMES ktxinfo)
 endif()
 
 set(APP_RESOURCES_SHADERS_SOURCE_DIR "${APP_RESOURCES_SOURCE_DIR}/shaders")
@@ -76,7 +84,8 @@ target_sources(
           ${CMAKE_CURRENT_SOURCE_DIR}/extern/rxi_log/src/log.c
   PRIVATE FILE_SET HEADERS BASE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/src/
           ${CMAKE_CURRENT_SOURCE_DIR}/extern/rxi_log/src/
-          ${cglm_SOURCE_DIR}/include)
+          $<$<PLATFORM_ID:Linux>:${ktx_linux_x86_64_SOURCE_DIR}/include>
+)
 
 target_compile_definitions(
   ${APP} PRIVATE LOG_USE_COLOR APP_USE_VK APP_NAME="${APP}"
@@ -88,7 +97,9 @@ target_compile_options(
 )
 target_link_libraries(
   ${APP} PRIVATE m SDL3::SDL3 volk::volk_headers VulkanMemoryAllocator
-                 $<$<PLATFORM_ID:Android>:log>)
+                 $<$<PLATFORM_ID:Android>:log>
+          $<$<PLATFORM_ID:Linux>:${ktx_linux_x86_64_SOURCE_DIR}/lib/libktx.so>
+)
 
 add_custom_target(
   ${APP}-run
@@ -145,20 +156,21 @@ foreach(i RANGE ${COUNT_MINUS_ONE})
   list(GET APP_ASSETS_TEXTURES_OUTPUT_NAMES ${i} OUTPUT_NAME)
 
   set(SRC_DIR ${APP_RESOURCES_TEXTURES_SOURCE_DIR}/${TEXTURES_DIR})
-  set(OUT_FILE ${APP_ASSETS_TEXTURES_SOURCE_DIR}/main/${OUTPUT_NAME})
+  set(OUT_FILE ${APP_ASSETS_TEXTURES_SOURCE_DIR}/${OUTPUT_NAME})
 
   file(GLOB PNG_FILES CONFIGURE_DEPENDS ${SRC_DIR}/*.png)
   list(LENGTH PNG_FILES TEXTURES_COUNT)
 
-  message(STATUS "[${APP}] TEXTURES SRC: ${SRC_DIR}")
+  # message(STATUS "[${APP}] TEXTURES SRC: ${SRC_DIR}")
 
   # --target_type array # --layers ${TEXTURES_COUNT} #
   add_custom_command(
     OUTPUT ${OUT_FILE} #
     COMMAND ${CMAKE_COMMAND} -E make_directory
-            ${APP_ASSETS_TEXTURES_SOURCE_DIR}/main/
-    COMMAND ${TOKTX_EXE} --t2 --genmipmap --encode uastc --layers ${TEXTURES_COUNT} #
+            ${APP_ASSETS_TEXTURES_SOURCE_DIR}/
+    COMMAND ${TOKTX_EXE} --t2 --genmipmap  --encode uastc  --layers ${TEXTURES_COUNT} #
             -- "${OUT_FILE}" ${PNG_FILES} #
+    COMMAND ${KTXINFO_EXE} ${OUT_FILE}
     DEPENDS ${PNG_FILES}
     COMMENT "[${APP}] Bundling textures from ${TEX_DIR}/ into ${OUT_FILE}"
     VERBATIM)
@@ -168,3 +180,4 @@ foreach(i RANGE ${COUNT_MINUS_ONE})
 endforeach()
 
 add_custom_target(${APP}-bundle-textures ALL DEPENDS ${KTX_TARGETS})
+add_dependencies(${APP}-run ${APP}-bundle-textures)

@@ -235,15 +235,6 @@ bool app_vkinit_depthimg() {
 
 /*
  *
- * app_vkninit_mesh_assets
- *
- * */
-bool app_vkinit_mesh_assets() {
-  return true;
-}
-
-/*
- *
  * app_vkinit_syncobj
  *
  * */
@@ -288,6 +279,15 @@ bool app_vkinit_cmdpool() {
   };
   app_vkchk(vkAllocateCommandBuffers(g_vkdev, &cb_ai, g_vkcb), "vkAllocateCommandBuffers");
 
+  return true;
+}
+
+/*
+ *
+ * app_vkninit_mesh_assets
+ *
+ * */
+bool app_vkinit_mesh_assets() {
   return true;
 }
 
@@ -444,8 +444,6 @@ bool app_vkinit_descriptor_layout() {
  * */
 bool app_vkinit_pipeline() {
 
-  // DESCRIPTOR
-
   // GRAPHIC PIPELINE
   VkPipelineShaderStageCreateInfo shdr_stages[] = {
       (VkPipelineShaderStageCreateInfo){
@@ -539,6 +537,13 @@ bool app_vkinit_pipeline() {
       .blendConstants  = {0.f, 0.f, 0.f, 0.f},
   };
 
+  VkPipelineDepthStencilStateCreateInfo desten_state = {
+      .sType            = VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO,
+      .depthTestEnable  = VK_FALSE,
+      .depthWriteEnable = VK_FALSE,
+      .depthCompareOp   = VK_COMPARE_OP_ALWAYS,
+  };
+
   VkPipelineRenderingCreateInfo rder_ci = {
       .sType                   = VK_STRUCTURE_TYPE_PIPELINE_RENDERING_CREATE_INFO,
       .colorAttachmentCount    = 1,
@@ -556,6 +561,7 @@ bool app_vkinit_pipeline() {
       .pRasterizationState = &ras_state,
       .pMultisampleState   = &ms_state,
       .pColorBlendState    = &colb_state,
+      .pDepthStencilState  = &desten_state,
       .renderPass          = VK_NULL_HANDLE,
       .layout              = g_vkmainpllayout,
   };
@@ -641,7 +647,8 @@ bool app_vkbegin_render() {
       .loadOp      = VK_ATTACHMENT_LOAD_OP_CLEAR,
       .storeOp     = VK_ATTACHMENT_STORE_OP_STORE,
       .clearValue  = {
-          .color = {APP_UTIL_COLOR_SRGBA(0.529f, 0.808f, 0.922f, 1.0f)},
+          .color = {APP_UTIL_COLOR_SRGBA(0.12156862745098039215f, 0.12156862745098039215f,
+                                         0.12156862745098039215f, 1.0f)},
       }};
 
   VkRenderingInfo ri = {
@@ -845,8 +852,8 @@ bool app_gameinit() {
             .colorb  = 1.f,
             .colora  = 1.f,
 
-            .scalex  = 1.f,
-            .scaley  = 1.f,
+            .scalex  = 1920.f,
+            .scaley  = 1080.f,
 
             .rot     = 0.f,
 
@@ -865,8 +872,8 @@ bool app_gameinit() {
             .colorb  = 1.f,
             .colora  = 1.f,
 
-            .scalex  = 0.25f,
-            .scaley  = 0.5f,
+            .scalex  = 80.f,
+            .scaley  = 80.f,
 
             .rot     = 0.f,
 
@@ -1032,7 +1039,7 @@ bool app_gameinit() {
 
         memcpy(vma_ai.pMappedData, ptex->pData, ptex->dataSize);
 
-        //
+        // SOURCE TO STAGING
         VkImageMemoryBarrier2 teximg_barrier = {
             .sType         = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER_2,
             .dstStageMask  = VK_PIPELINE_STAGE_2_TRANSFER_BIT,
@@ -1054,7 +1061,7 @@ bool app_gameinit() {
             .pImageMemoryBarriers    = &teximg_barrier,
         };
 
-        // How to copy the images data ??
+        // COPY DATA TO SHADER
         vkCmdPipelineBarrier2(uploadcb, &teximg_di);
 
         uint32_t region_count = APP_VK_MAIN_GAME_TEXTURE_ARRAY_MIPLEVELS;
@@ -1099,6 +1106,7 @@ bool app_gameinit() {
 
         vkCmdCopyBufferToImage2(uploadcb, &cpinfo);
 
+        // STAGING TO SHADER
         VkImageMemoryBarrier2 texread_barrier = {
             .sType         = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER_2,
             .srcStageMask  = VK_PIPELINE_STAGE_2_TRANSFER_BIT,
@@ -1159,6 +1167,7 @@ bool app_gameinit() {
           .imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
       };
 
+      // DOUBLE BUFFER UPDATE
       for (size_t frame = 0; frame < APP_VK_MAX_FIFO; ++frame) {
         VkWriteDescriptorSet wdset = {
             .sType           = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,

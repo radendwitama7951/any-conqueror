@@ -42,13 +42,15 @@ SDL_AppResult SDL_AppInit(void** pp_as, int argc, char* argv[]) {
   app_chk(app_vkinit_surface(), "app_vkinit_surface");
   app_chk(app_vkinit_swapchain(), "app_vkinit_swapchain");
   app_chk(app_vkinit_depthimg(), "app_vkinit_depthimg");
-  app_chk(app_vkinit_mesh_assets(), "app_vkinit_mesh_assets");
   app_chk(app_vkinit_syncobj(), "app_vkinit_syncobj");
   app_chk(app_vkinit_cmdpool(), "app_vkinit_cmdpool");
 
-  app_chk(app_vkinit_shader(), "app_vkinit_shader");
   app_chk(app_vkinit_descriptor_layout(), "app_vkinit_descriptor_pool");
+
+  app_chk(app_vkinit_mesh_assets(), "app_vkinit_mesh_assets");
   app_chk(app_vkinit_tex_assets(), "app_vkinit_tex_assets");
+
+  app_chk(app_vkinit_shader(), "app_vkinit_shader");
   app_chk(app_vkinit_pipeline(), "app_vkinit_pipeline");
 #endif  //APP_USE_VK
 

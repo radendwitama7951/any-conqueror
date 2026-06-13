@@ -6,7 +6,7 @@
 
 #include <vk_mem_alloc.h>
 
-#define APP_MAIN_WINDOW_SCALE 1
+#define APP_MAIN_WINDOW_SCALE .5f
 #define APP_MAIN_WINDOW_WIDTH (1920 * APP_MAIN_WINDOW_SCALE)
 #define APP_MAIN_WINDOW_HEIGHT (1080 * APP_MAIN_WINDOW_SCALE)
 
@@ -27,38 +27,27 @@ const char* APP_GAME_TEXTURE_ARRAY_SOURCE_PATH[] = {
 };
 
 /*
- * // SHADERS SSBO STRUCT
- *
- * struct app_game_data_t {
- *  vec2 coord;
- *  vec4 color;
- *  vec2 scale;
- *  float rot;
- *  vec2 translate
- *
- *  uint texid
- * };
  *
  * */
 typedef struct {
-  // 32 byte pad
+  // 16 byte align
   float coordx;
   float coordy;
   float _pad0[2];
 
-  // 32 byte pad
+  // 16 byte align
   float colorr;
   float colorg;
   float colorb;
   float colora;
 
-  // 32 byte pad
+  // 16 byte align
   float scalex;
   float scaley;
   float rot;
   uint32_t _pad1[1];
 
-  // 32 byte pad
+  // 16 byte align
   float transx;
   float transy;
   uint32_t texslot;
@@ -67,7 +56,47 @@ typedef struct {
   // uint32_t _pad2[1];
 } app_game_render_data_t;
 
-#define APP_GAME_RENDER_DATA sizeof(app_game_render_data_t)
+#define APP_GAME_RENDER_DATA_SZ sizeof(app_game_render_data_t)
+
+/*
+ * CAMERA
+ * !world space == view space
+ * !anchor top-left
+ *
+ * */
+typedef struct {
+  // 16 byte align
+  float posx;
+  float posy;
+
+  float zoom;
+  float _pad0[1];
+
+  // 16 byte align
+  float resow;
+  float resoh;
+  // float _pad1[2]; // ignored
+} app_game_camera_data_t;
+#define APP_GAME_CAMERA_DATA_SZ sizeof(app_game_camera_data_t)
+
+static app_game_camera_data_t g_game_cam = {
+    .posx  = -1920 / 2.f,
+    .posy  = -1080 / 2.f,
+    .zoom  = 1.,
+    .resow = 1920,
+    .resoh = 1080,
+};
+
+#define APP_GAME_TILE_RADIUS_SCALE 1.0
+#define APP_GAME_TILE_INRADIUS_SCALE 0.866
+
+#define APP_GAME_TILE_SCALE_X (77.942f * 0.5 * APP_MAIN_WINDOW_SCALE)
+#define APP_GAME_TILE_SCALE_Y (77.942f * 0.5 * APP_MAIN_WINDOW_SCALE)
+
+#define APP_GAME_TILE_RADIUS (APP_GAME_TILE_RADIUS_SCALE * APP_GAME_TILE_SCALE_X)
+#define APP_GAME_TILE_INRADIUS (APP_GAME_TILE_INRADIUS_SCALE * APP_GAME_TILE_SCALE_Y)
+#define APP_GAME_TILE_SPACE_HORIZ (3.f / 2.f * APP_GAME_TILE_RADIUS)
+#define APP_GAME_TILE_SPACE_VERTI (2.f * APP_GAME_TILE_INRADIUS)
 
 /*
  *
@@ -141,7 +170,7 @@ uint32_t g_vkq_fam;
  * DESCRIPTOR SET (VERTEX ATTRIBUTE) SSBOs
  * 
  * */
-#define APP_VK_MAIN_GAME_DATA_BUFFER_SZ (APP_GAME_RENDER_DATA * APP_GAME_GRID_TILE_COUNT)
+#define APP_VK_MAIN_GAME_DATA_BUFFER_SZ (APP_GAME_RENDER_DATA_SZ * APP_GAME_GRID_TILE_COUNT)
 
 typedef struct {
   VkBuffer ssbobuf;

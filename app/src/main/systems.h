@@ -284,25 +284,6 @@ bool app_vkinit_cmdpool() {
 
 /*
  *
- * app_vkninit_mesh_assets
- *
- * */
-bool app_vkinit_mesh_assets() {
-  return true;
-}
-
-/*
- *
- * app_vkinit_tex_assets
- *
- * */
-bool app_vkinit_tex_assets() {
-
-  return true;
-}
-
-/*
- *
  * app_vkinit_shader
  *
  * */
@@ -424,16 +405,6 @@ bool app_vkinit_descriptor_layout() {
   app_vkchk(vkCreateDescriptorSetLayout(g_vkdev, &dsetl_ci, NULL, &g_vkmaindsetlayout),
             "vkCreateDescriptorSetLayout");
 
-  VkPipelineLayoutCreateInfo pllayout_ci = {
-      .sType                  = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO,
-      .setLayoutCount         = 1,
-      .pSetLayouts            = &g_vkmaindsetlayout,
-      .pushConstantRangeCount = 0,
-  };
-
-  app_vkchk(vkCreatePipelineLayout(g_vkdev, &pllayout_ci, NULL, &g_vkmainpllayout),
-            "vkCreatePipelineLayout");
-
   return true;
 }
 
@@ -443,6 +414,20 @@ bool app_vkinit_descriptor_layout() {
  *
  * */
 bool app_vkinit_pipeline() {
+  // PIPELINE LAYOUT
+  VkPushConstantRange pushconstrange     = {.stageFlags = VK_SHADER_STAGE_VERTEX_BIT,
+                                            .size       = APP_GAME_CAMERA_DATA_SZ};
+
+  VkPipelineLayoutCreateInfo pllayout_ci = {
+      .sType                  = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO,
+      .setLayoutCount         = 1,
+      .pSetLayouts            = &g_vkmaindsetlayout,
+      .pushConstantRangeCount = 1,
+      .pPushConstantRanges    = &pushconstrange,
+  };
+
+  app_vkchk(vkCreatePipelineLayout(g_vkdev, &pllayout_ci, NULL, &g_vkmainpllayout),
+            "vkCreatePipelineLayout");
 
   // GRAPHIC PIPELINE
   VkPipelineShaderStageCreateInfo shdr_stages[] = {
@@ -572,6 +557,457 @@ bool app_vkinit_pipeline() {
   return true;
 }
 
+bool app_vkinit_render_data() {
+  // INIT TILES DATA (SSBOs)
+
+  // DESCRIPTOR DATA
+  for (size_t i = 0; i < APP_VK_MAX_FIFO; ++i) {
+    // PREPAPARE BUFFER
+    VkBufferCreateInfo buf_ci = {
+        .sType       = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO,
+        .size        = APP_VK_MAIN_GAME_DATA_BUFFER_SZ,
+        .usage       = VK_BUFFER_USAGE_STORAGE_BUFFER_BIT,
+        .sharingMode = VK_SHARING_MODE_EXCLUSIVE,
+    };
+
+    VmaAllocationCreateInfo vma_aci = {
+        .flags = VMA_ALLOCATION_CREATE_MAPPED_BIT |
+                 VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT,
+        .usage = VMA_MEMORY_USAGE_AUTO,
+    };
+
+    VmaAllocationInfo vma_ai = {0};
+    app_vkchk(vmaCreateBuffer(g_vkvma_allocator, &buf_ci, &vma_aci, &g_vkmain_game_data[i].ssbobuf,
+                              &g_vkmain_game_data[i].ssboalloc, &vma_ai),
+              "vmaCreateBuffer");
+
+    g_vkmain_game_data[i].pmapped_data = vma_ai.pMappedData;
+
+    // LINK ALLOCATION TO DESCRIPTOR SETS
+    uint32_t maxbindingcount[]                                        = {128};
+    VkDescriptorSetVariableDescriptorCountAllocateInfo dsetvdcount_ai = {
+        .sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_VARIABLE_DESCRIPTOR_COUNT_ALLOCATE_INFO,
+        .descriptorSetCount = 1,
+        .pDescriptorCounts  = maxbindingcount,
+    };
+
+    VkDescriptorSetAllocateInfo dset_ai = {
+        .sType              = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO,
+        .pNext              = &dsetvdcount_ai,
+        .descriptorPool     = g_vkmaindsetpool,
+        .descriptorSetCount = 1,
+        .pSetLayouts        = &g_vkmaindsetlayout,
+    };
+
+    // g_vkmain_game_data is per frame data (g_vk_frames)
+    app_vkchk(vkAllocateDescriptorSets(g_vkdev, &dset_ai, &g_vkmain_game_data[i].dset),
+              "vkAllocateDescriptorSets");
+
+    // WRITE DATA
+    VkDescriptorBufferInfo dset_bufi = {
+        .buffer = g_vkmain_game_data[i].ssbobuf,
+        .offset = 0,
+        .range  = APP_VK_MAIN_GAME_DATA_BUFFER_SZ,
+    };
+
+    VkWriteDescriptorSet wdset = {
+        .sType           = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
+        .dstSet          = g_vkmain_game_data[i].dset,
+        .dstBinding      = 0,
+        .dstArrayElement = 0,
+        .descriptorCount = 1,
+        .descriptorType  = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,
+        .pBufferInfo     = &dset_bufi,
+    };
+
+    vkUpdateDescriptorSets(g_vkdev, 1, &wdset, 0, NULL);
+  }
+
+  size_t offset                                   = sizeof(g_vkmain_game_data);
+  app_game_render_data_t* game_data_mapped_data[] = {
+      (app_game_render_data_t*)g_vkmain_game_data[0].pmapped_data,
+      (app_game_render_data_t*)g_vkmain_game_data[1].pmapped_data,
+  };
+
+  if (game_data_mapped_data[0] == NULL) {
+    log_error("[app] g_vkmain_game_data[%d].pmapped_data", 0);
+    return false;
+  }
+
+  if (game_data_mapped_data[1] == NULL) {
+    log_error("[app] g_vkmain_game_data[%d].pmapped_data", 1);
+    return false;
+  }
+
+  // ADD INSTANCE
+  app_game_render_data_t tiles[] = {
+      (app_game_render_data_t){
+          .coordx  = 0.f,
+          .coordy  = 0.f,
+
+          .colorr  = 1.f,
+          .colorg  = 1.f,
+          .colorb  = 1.f,
+          .colora  = 1.f,
+
+          .scalex  = 1920.f,
+          .scaley  = 1080.f,
+
+          .rot     = 0.f,
+
+          .transx  = 0.f,
+          .transy  = 0.f,
+
+          .texslot = 0,
+          .texid   = 1,
+      },
+      (app_game_render_data_t){
+          .coordx  = 0.f,
+          .coordy  = 0.f,
+
+          .colorr  = 1.f,
+          .colorg  = 1.0f,
+          .colorb  = 1.f,
+          .colora  = 1.f,
+
+          .scalex  = 80.f,
+          .scaley  = 80.f,
+
+          .rot     = 0.f,
+
+          .transx  = 0.f,
+          .transy  = 0.f,
+
+          .texslot = 1,
+          .texid   = 2,
+      },
+  };
+
+  // DOUBLE BUFFER
+  memcpy(game_data_mapped_data[0], tiles, sizeof(tiles));
+  memcpy(game_data_mapped_data[1], tiles, sizeof(tiles));
+
+  return true;
+}
+
+/*
+ *
+ * app_vkninit_mesh_assets
+ *
+ * */
+bool app_vkinit_mesh_assets() {
+  return true;
+}
+
+/*
+ *
+ * app_vkinit_tex_assets
+ *
+ * */
+bool app_vkinit_tex_assets() {
+  // INIT TEXTURES (bindless uniform sampler2DArray)
+  // UPLOAD COMMAND BUFFER
+  VkFence uploadfnc;
+  VkFenceCreateInfo fnc_ci = {
+      .sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO,
+  };
+  app_vkchk(vkCreateFence(g_vkdev, &fnc_ci, NULL, &uploadfnc), "vkCreateFence");
+
+  VkCommandBuffer uploadcb;
+  VkCommandBufferAllocateInfo cb_ai = {
+      .sType              = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO,
+      .commandPool        = g_vkcp,
+      .commandBufferCount = 1,
+  };
+
+  app_vkchk(vkAllocateCommandBuffers(g_vkdev, &cb_ai, &uploadcb), "vkAllocateCommandBuffers");
+
+  VkCommandBufferBeginInfo cb_bi = {
+      .sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO,
+      .flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT,
+  };
+  app_vkchk(vkBeginCommandBuffer(uploadcb, &cb_bi), "vkBeginCommandBuffer");
+
+  VkBuffer stagingbuf[APP_GAME_TEXTURE_ARRAY_COUNT]        = {};
+  VmaAllocation stagingalloc[APP_GAME_TEXTURE_ARRAY_COUNT] = {};
+
+  // UPLOAD EACH TEXTURE ARRAY
+  for (size_t i = 0; i < APP_GAME_TEXTURE_ARRAY_COUNT; ++i) {
+    // CREATE TEXTURE OBJECT
+    SDL_IOStream* io = SDL_IOFromFile(APP_GAME_TEXTURE_ARRAY_SOURCE_PATH[i], "rb");
+    if (!io) {
+      log_error("[app] SDL_IOFromFile: %s", SDL_GetError());
+      return false;
+    }
+
+    size_t filesz;
+    void* buf = SDL_LoadFile_IO(io, &filesz, true);
+    if (!buf) {
+      log_error("[app] SDL_LoadFile_IO: %s", SDL_GetError());
+      return false;
+    }
+    ktxTexture2* ptex    = NULL;
+    KTX_error_code texec = ktxTexture2_CreateFromMemory(  //
+        (const ktx_uint8_t*)buf,                          //
+        filesz,                                           //
+        KTX_TEXTURE_CREATE_LOAD_IMAGE_DATA_BIT,           //
+        &ptex                                             //
+    );
+    if (texec != KTX_SUCCESS) {
+      log_error(                                                        //
+          "[app] ktxTexture2_CreateFromMemory: %s:%s",                  //
+          APP_GAME_TEXTURE_ARRAY_SOURCE_PATH[i], ktxErrorString(texec)  //
+      );
+
+      return false;
+    }
+
+    log_debug("=============================================");
+    log_debug("[app] TEXTURE: %s", APP_GAME_TEXTURE_ARRAY_SOURCE_PATH[i]);
+    log_debug("[app] ptex: classId %d", ptex->classId);
+    log_debug("[app] ptex: vkFormat %d", ptex->vkFormat);
+    log_debug("[app] ptex: isArray ? %s", ptex->isArray ? "Yes" : "No");
+    log_debug("[app] ptex: isCompressed? %s", ptex->isCompressed ? "Yes" : "No");
+    log_debug("[app] ptex: dataSize %d", ptex->dataSize);
+    log_debug("[app] ptex: baseDepth %d", ptex->baseDepth);
+    log_debug("[app] ptex: numLayers %d", ptex->numLayers);
+    log_debug("[app] ptex: numLevels %d", ptex->numLevels);
+    log_debug("[app] ptex: baseWidth %d", ptex->baseWidth);
+    log_debug("[app] ptex: baseHeight %d", ptex->baseHeight);
+    log_debug("=============================================");
+
+    if (ktxTexture2_NeedsTranscoding(ptex)) {
+      log_debug("[app] ptex: need transcode %s", APP_GAME_TEXTURE_ARRAY_SOURCE_PATH[i]);
+      ktx_transcode_fmt_e tcodefmt = KTX_TTF_BC7_RGBA;
+
+      KTX_error_code tcodeec       = ktxTexture2_TranscodeBasis(ptex, tcodefmt, 0);
+
+      if (tcodeec != KTX_SUCCESS) {
+        log_error("[app] Failed to transcode UASTC texture: %s:%s",
+                  APP_GAME_TEXTURE_ARRAY_SOURCE_PATH[i], ktxErrorString(tcodeec));
+        return false;
+      }
+    }
+
+    VkImageCreateInfo img_ci = {
+        .sType     = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO,
+        .imageType = VK_IMAGE_TYPE_2D,
+        .format    = ptex->vkFormat,
+        .extent =
+            {
+                .width  = ptex->baseWidth,
+                .height = ptex->baseHeight,
+                .depth  = 1,
+            },
+        .mipLevels =
+            APP_VK_MAIN_GAME_TEXTURE_ARRAY_MIPLEVELS,  // APP_VK_MAIN_GAME_TEXTURE_ARRAY_MIPLEVELS,
+        .arrayLayers   = ptex->numLayers,
+        .samples       = VK_SAMPLE_COUNT_1_BIT,
+        .tiling        = VK_IMAGE_TILING_OPTIMAL,
+        .usage         = VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT,
+        .initialLayout = VK_IMAGE_LAYOUT_UNDEFINED,
+    };
+
+    VmaAllocationCreateInfo alloc_ci = {.usage = VMA_MEMORY_USAGE_AUTO};
+    app_vkchk(vmaCreateImage(g_vkvma_allocator, &img_ci, &alloc_ci, &g_vkmain_game_texs[i].img,
+                             &g_vkmain_game_texs[i].alloc, NULL),
+              "vmaCreateImage");
+
+    VkImageViewCreateInfo imgv_ci = {
+        .sType    = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO,
+        .image    = g_vkmain_game_texs[i].img,
+        .viewType = VK_IMAGE_VIEW_TYPE_2D_ARRAY,
+        .format   = img_ci.format,
+        .subresourceRange =
+            {
+                .aspectMask = VK_IMAGE_ASPECT_COLOR_BIT,
+                .levelCount =
+                    APP_VK_MAIN_GAME_TEXTURE_ARRAY_MIPLEVELS,  // APP_VK_MAIN_GAME_TEXTURE_ARRAY_MIPLEVELS,
+                .baseArrayLayer = 0,
+                .layerCount     = ptex->numLayers,
+            },
+    };
+
+    app_vkchk(vkCreateImageView(g_vkdev, &imgv_ci, NULL, &g_vkmain_game_texs[i].view),
+              "vkCreateImageView");
+    g_vkmain_game_texs[i].layer_count = ptex->numLayers;
+
+    // UPLOAD
+    {
+
+      VkBufferCreateInfo buf_ci = {
+          .sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO,
+          .size  = ptex->dataSize,
+          .usage = VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
+      };
+      VmaAllocationCreateInfo vma_aci = {
+          .flags = (VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT |
+                    VMA_ALLOCATION_CREATE_MAPPED_BIT),
+          .usage = VMA_MEMORY_USAGE_AUTO,
+      };
+      VmaAllocationInfo vma_ai = {};
+
+      app_vkchk(vmaCreateBuffer(g_vkvma_allocator, &buf_ci, &vma_aci, &stagingbuf[i],
+                                &stagingalloc[i], &vma_ai),
+                "vmaCreateBuffer");
+
+      memcpy(vma_ai.pMappedData, ptex->pData, ptex->dataSize);
+
+      // SOURCE TO STAGING
+      VkImageMemoryBarrier2 teximg_barrier = {
+          .sType         = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER_2,
+          .dstStageMask  = VK_PIPELINE_STAGE_2_TRANSFER_BIT,
+          .dstAccessMask = VK_ACCESS_2_TRANSFER_WRITE_BIT,
+          .oldLayout     = VK_IMAGE_LAYOUT_UNDEFINED,
+          .newLayout     = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+          .image         = g_vkmain_game_texs[i].img,
+          .subresourceRange =
+              {
+                  .aspectMask = VK_IMAGE_ASPECT_COLOR_BIT,
+                  .levelCount = APP_VK_MAIN_GAME_TEXTURE_ARRAY_MIPLEVELS,
+                  .layerCount = ptex->numLayers,
+              },
+      };
+
+      VkDependencyInfo teximg_di = {
+          .sType                   = VK_STRUCTURE_TYPE_DEPENDENCY_INFO,
+          .imageMemoryBarrierCount = 1,
+          .pImageMemoryBarriers    = &teximg_barrier,
+      };
+
+      // COPY DATA TO SHADER
+      vkCmdPipelineBarrier2(uploadcb, &teximg_di);
+
+      uint32_t region_count = APP_VK_MAIN_GAME_TEXTURE_ARRAY_MIPLEVELS;
+      VkBufferImageCopy2* cpregions =
+          (VkBufferImageCopy2*)SDL_calloc(region_count, sizeof(VkBufferImageCopy2));
+
+      for (uint32_t lv = 0; lv < APP_VK_MAIN_GAME_TEXTURE_ARRAY_MIPLEVELS; ++lv) {
+        ktx_size_t offset = 0;
+        ktxTexture2_GetImageOffset(ptex, lv, 0, 0, &offset);
+
+        uint32_t mipw = SDL_max(1, ptex->baseWidth >> lv);
+        uint32_t miph = SDL_max(1, ptex->baseHeight >> lv);
+
+        cpregions[lv] = (VkBufferImageCopy2){
+            .sType        = VK_STRUCTURE_TYPE_BUFFER_IMAGE_COPY_2,
+            .bufferOffset = offset,
+            .imageSubresource =
+                {
+                    .aspectMask     = VK_IMAGE_ASPECT_COLOR_BIT,
+                    .mipLevel       = lv,
+                    .baseArrayLayer = 0,
+                    .layerCount     = ptex->numLayers,
+                },
+            .imageExtent =
+                {
+                    .width  = mipw,
+                    .height = miph,
+                    .depth  = 1,
+                },
+
+        };
+      }
+
+      VkCopyBufferToImageInfo2 cpinfo = {
+          .sType          = VK_STRUCTURE_TYPE_COPY_BUFFER_TO_IMAGE_INFO_2,
+          .srcBuffer      = stagingbuf[i],
+          .dstImage       = g_vkmain_game_texs[i].img,
+          .dstImageLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+          .regionCount    = region_count,
+          .pRegions       = cpregions,
+      };
+
+      vkCmdCopyBufferToImage2(uploadcb, &cpinfo);
+
+      // STAGING TO SHADER
+      VkImageMemoryBarrier2 texread_barrier = {
+          .sType         = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER_2,
+          .srcStageMask  = VK_PIPELINE_STAGE_2_TRANSFER_BIT,
+          .srcAccessMask = VK_ACCESS_2_TRANSFER_WRITE_BIT,
+          .dstStageMask  = VK_PIPELINE_STAGE_2_FRAGMENT_SHADER_BIT,
+          .dstAccessMask = VK_ACCESS_2_SHADER_READ_BIT,
+          .oldLayout     = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+          .newLayout     = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
+          .image         = g_vkmain_game_texs[i].img,
+          .subresourceRange =
+              {
+                  .aspectMask = VK_IMAGE_ASPECT_COLOR_BIT,
+                  .levelCount = APP_VK_MAIN_GAME_TEXTURE_ARRAY_MIPLEVELS,
+                  .layerCount = ptex->numLayers,
+              },
+      };
+
+      VkDependencyInfo texread_di = {
+          .sType                   = VK_STRUCTURE_TYPE_DEPENDENCY_INFO,
+          .imageMemoryBarrierCount = 1,
+          .pImageMemoryBarriers    = &texread_barrier,
+      };
+
+      vkCmdPipelineBarrier2(uploadcb, &texread_di);
+
+      SDL_free(cpregions);
+    }
+
+    ktxTexture2_Destroy(ptex);
+    SDL_free(buf);
+  }
+
+  app_vkchk(vkEndCommandBuffer(uploadcb), "vkEndCommandBuffer");
+  VkSubmitInfo si = {
+      .sType              = VK_STRUCTURE_TYPE_SUBMIT_INFO,
+      .commandBufferCount = 1,
+      .pCommandBuffers    = &uploadcb,
+  };
+  app_vkchk(vkQueueSubmit(g_vkqueue, 1, &si, uploadfnc), "vkQueueSubmit");
+  app_vkchk(vkWaitForFences(g_vkdev, 1, &uploadfnc, VK_TRUE, UINT64_MAX), "vkWaitForFences");
+
+  // INIT DESCRIPTOR
+  VkSampler texsampler;
+  VkSamplerCreateInfo sampler_ci = {
+      .sType        = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO,
+      .magFilter    = VK_FILTER_LINEAR,
+      .minFilter    = VK_FILTER_LINEAR,
+      .addressModeU = VK_SAMPLER_ADDRESS_MODE_REPEAT,
+      .addressModeV = VK_SAMPLER_ADDRESS_MODE_REPEAT,
+      .mipmapMode   = VK_SAMPLER_MIPMAP_MODE_LINEAR,
+  };
+  app_vkchk(vkCreateSampler(g_vkdev, &sampler_ci, NULL, &texsampler), "vkCreateSampler");
+
+  for (size_t i = 0; i < APP_GAME_TEXTURE_ARRAY_COUNT; ++i) {
+    VkDescriptorImageInfo dsetimginfo = {
+        .sampler     = texsampler,
+        .imageView   = g_vkmain_game_texs[i].view,
+        .imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
+    };
+
+    // DOUBLE BUFFER UPDATE
+    for (size_t frame = 0; frame < APP_VK_MAX_FIFO; ++frame) {
+      VkWriteDescriptorSet wdset = {
+          .sType           = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
+          .dstSet          = g_vkmain_game_data[frame].dset,
+          .dstBinding      = 1,
+          .dstArrayElement = (uint32_t)i,
+          .descriptorCount = 1,
+          .descriptorType  = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
+          .pImageInfo      = &dsetimginfo,
+      };
+
+      vkUpdateDescriptorSets(g_vkdev, 1, &wdset, 0, NULL);
+    }
+  }
+
+  // CLEANUP STAGING BUFFER
+  for (size_t i = 0; i < APP_GAME_TEXTURE_ARRAY_COUNT; ++i) {
+    vmaDestroyBuffer(g_vkvma_allocator, stagingbuf[i], stagingalloc[i]);
+  }
+
+  vkFreeCommandBuffers(g_vkdev, g_vkcp, 1, &uploadcb);
+  vkDestroyFence(g_vkdev, uploadfnc, NULL);
+
+  return true;
+}
+
 /*
  *
  * app_vkhandle_event
@@ -582,7 +1018,7 @@ bool app_vkhandle_event(SDL_Event* p_ev) {
 }
 
 /*
- *
+ * RENDER
  * app_vkbegin_render 
  *
  * */
@@ -633,11 +1069,12 @@ bool app_vkbegin_render() {
   };
   vkCmdPipelineBarrier2(cb, &barrier_di);
 
-  // log_debug("[app] IM HERE");
   vkCmdBindPipeline(cb, VK_PIPELINE_BIND_POINT_GRAPHICS, g_vkmainpl);
   vkCmdBindDescriptorSets(cb, VK_PIPELINE_BIND_POINT_GRAPHICS, g_vkmainpllayout, 0, 1,
                           &g_vkmain_game_data[g_vkframe_idx].dset, 0, NULL);
-  // Need Bind here ?
+
+  vkCmdPushConstants(cb, g_vkmainpllayout, VK_SHADER_STAGE_VERTEX_BIT, 0, APP_GAME_CAMERA_DATA_SZ,
+                     &g_game_cam);
 
   // BEGIN RENDER
   VkRenderingAttachmentInfo col_atchi = {
@@ -704,6 +1141,12 @@ bool app_vkbegin_render() {
   return true;
 }
 
+/*
+ *
+ * app_vkdestroy
+ *
+ *
+ * */
 bool app_vkdestroy() {
 
   app_vkchk(vkDeviceWaitIdle(g_vkdev), "vkDeviceWaitIdle");
@@ -758,439 +1201,128 @@ bool app_vkdestroy() {
  *
  * */
 bool app_gameinit() {
-  // INIT TILES DATA (SSBOs)
-  {
 
-    // DESCRIPTOR DATA
-    for (size_t i = 0; i < APP_VK_MAX_FIFO; ++i) {
-      // PREPAPARE BUFFER
-      VkBufferCreateInfo buf_ci = {
-          .sType       = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO,
-          .size        = APP_VK_MAIN_GAME_DATA_BUFFER_SZ,
-          .usage       = VK_BUFFER_USAGE_STORAGE_BUFFER_BIT,
-          .sharingMode = VK_SHARING_MODE_EXCLUSIVE,
-      };
+  return true;
+}
 
-      VmaAllocationCreateInfo vma_aci = {
-          .flags = VMA_ALLOCATION_CREATE_MAPPED_BIT |
-                   VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT,
-          .usage = VMA_MEMORY_USAGE_AUTO,
-      };
+bool app_gameev_camera_control(const SDL_Event* p_ev) {
+  static bool isdragging  = false;
+  static float lastmousex = 0;
+  static float lastmousey = 0;
 
-      VmaAllocationInfo vma_ai = {0};
-      app_vkchk(
-          vmaCreateBuffer(g_vkvma_allocator, &buf_ci, &vma_aci, &g_vkmain_game_data[i].ssbobuf,
-                          &g_vkmain_game_data[i].ssboalloc, &vma_ai),
-          "vmaCreateBuffer");
+  const float zoom        = g_game_cam.zoom;
+  const float camx        = g_game_cam.posx;
+  const float camy        = g_game_cam.posy;
 
-      g_vkmain_game_data[i].pmapped_data = vma_ai.pMappedData;
+  if (p_ev->type == SDL_EVENT_MOUSE_BUTTON_DOWN) {
+    isdragging = true;
+    lastmousex = p_ev->button.x;
+    lastmousey = p_ev->button.y;
+  } else if (p_ev->type == SDL_EVENT_MOUSE_BUTTON_UP) {
+    isdragging = false;
+  } else if (p_ev->type == SDL_EVENT_MOUSE_MOTION && isdragging) {
+    const float dx = (p_ev->motion.x - lastmousex) / zoom;
+    const float dy = (p_ev->motion.y - lastmousey) / zoom;
 
-      // LINK ALLOCATION TO DESCRIPTOR SETS
-      uint32_t maxbindingcount[]                                        = {128};
-      VkDescriptorSetVariableDescriptorCountAllocateInfo dsetvdcount_ai = {
-          .sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_VARIABLE_DESCRIPTOR_COUNT_ALLOCATE_INFO,
-          .descriptorSetCount = 1,
-          .pDescriptorCounts  = maxbindingcount,
-      };
+    g_game_cam.posx -= dx;
+    g_game_cam.posy -= dy;
 
-      VkDescriptorSetAllocateInfo dset_ai = {
-          .sType              = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO,
-          .pNext              = &dsetvdcount_ai,
-          .descriptorPool     = g_vkmaindsetpool,
-          .descriptorSetCount = 1,
-          .pSetLayouts        = &g_vkmaindsetlayout,
-      };
-
-      // g_vkmain_game_data is per frame data (g_vk_frames)
-      app_vkchk(vkAllocateDescriptorSets(g_vkdev, &dset_ai, &g_vkmain_game_data[i].dset),
-                "vkAllocateDescriptorSets");
-
-      // WRITE DATA
-      VkDescriptorBufferInfo dset_bufi = {
-          .buffer = g_vkmain_game_data[i].ssbobuf,
-          .offset = 0,
-          .range  = APP_VK_MAIN_GAME_DATA_BUFFER_SZ,
-      };
-
-      VkWriteDescriptorSet wdset = {
-          .sType           = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
-          .dstSet          = g_vkmain_game_data[i].dset,
-          .dstBinding      = 0,
-          .dstArrayElement = 0,
-          .descriptorCount = 1,
-          .descriptorType  = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,
-          .pBufferInfo     = &dset_bufi,
-      };
-
-      vkUpdateDescriptorSets(g_vkdev, 1, &wdset, 0, NULL);
+    lastmousex = p_ev->motion.x;
+    lastmousey = p_ev->motion.y;
+  } else if (p_ev->type == SDL_EVENT_KEY_DOWN) {
+    switch (p_ev->key.key) {
+      case SDLK_LEFT: {
+        g_game_cam.posx -= APP_GAME_TILE_SPACE_HORIZ;
+      } break;
+      case SDLK_RIGHT: {
+        g_game_cam.posx -= APP_GAME_TILE_SPACE_HORIZ;
+      } break;
     }
-
-    size_t offset                                   = sizeof(g_vkmain_game_data);
-    app_game_render_data_t* game_data_mapped_data[] = {
-        (app_game_render_data_t*)g_vkmain_game_data[0].pmapped_data,
-        (app_game_render_data_t*)g_vkmain_game_data[1].pmapped_data,
-    };
-
-    if (game_data_mapped_data[0] == NULL) {
-      log_error("[app] g_vkmain_game_data[%d].pmapped_data", 0);
-      return false;
-    }
-
-    if (game_data_mapped_data[1] == NULL) {
-      log_error("[app] g_vkmain_game_data[%d].pmapped_data", 1);
-      return false;
-    }
-
-    // ADD INSTANCE
-    app_game_render_data_t tiles[] = {
-        (app_game_render_data_t){
-            .coordx  = 0.f,
-            .coordy  = 0.f,
-
-            .colorr  = 1.f,
-            .colorg  = 1.f,
-            .colorb  = 1.f,
-            .colora  = 1.f,
-
-            .scalex  = 1920.f,
-            .scaley  = 1080.f,
-
-            .rot     = 0.f,
-
-            .transx  = 0.f,
-            .transy  = 0.f,
-
-            .texslot = 0,
-            .texid   = 1,
-        },
-        (app_game_render_data_t){
-            .coordx  = 0.f,
-            .coordy  = 0.f,
-
-            .colorr  = 1.f,
-            .colorg  = 1.0f,
-            .colorb  = 1.f,
-            .colora  = 1.f,
-
-            .scalex  = 80.f,
-            .scaley  = 80.f,
-
-            .rot     = 0.f,
-
-            .transx  = 0.f,
-            .transy  = 0.f,
-
-            .texslot = 1,
-            .texid   = 2,
-        },
-    };
-
-    // DOUBLE BUFFER
-    memcpy(game_data_mapped_data[0], tiles, sizeof(tiles));
-    memcpy(game_data_mapped_data[1], tiles, sizeof(tiles));
   }
 
-  // INIT TEXTURES (bindless uniform sampler2DArray)
-  {
-    // UPLOAD COMMAND BUFFER
-    VkFence uploadfnc;
-    VkFenceCreateInfo fnc_ci = {
-        .sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO,
-    };
-    app_vkchk(vkCreateFence(g_vkdev, &fnc_ci, NULL, &uploadfnc), "vkCreateFence");
+  /* KEYBOARD ZOOM LOGIC */
+  DESKTOP_ONLY({
+    if (p_ev->type == SDL_EVENT_MOUSE_WHEEL) {
+      g_game_cam.zoom = APP_UTIL_CLAMP(zoom + (p_ev->wheel.y * .1f), 1.f, 4.f);
+    }
+  });
 
-    VkCommandBuffer uploadcb;
-    VkCommandBufferAllocateInfo cb_ai = {
-        .sType              = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO,
-        .commandPool        = g_vkcp,
-        .commandBufferCount = 1,
-    };
+  /*
+ * TOUCH SCREEN ZOOM PINCH LOGIC BY GOOGLE GEMINI
+ * * Logic Overview:
+ * 1. State Tracking: Maintains a relative scale by capturing the initial 
+ * distance between two fingers (g_start_distance) and the camera's
+ * starting zoom level (g_start_zoom) upon the start of a pinch.
+ *
+ * 2. Multiplicative Scaling: Uses a distance ratio (cur_distance / start_distance)
+ * to multiply the start_zoom, allowing for fluid, bi-directional 
+ * zooming (in and out) rather than additive offsets.
+ *
+ * 3. Event-Driven: Specifically designed for SDL3 touch events, avoiding 
+ * deprecated API queries by tracking finger state via 
+ * SDL_EVENT_FINGER_DOWN/MOTION/UP.
+ * * Integration:
+ * - Update g_game_cam.zoom within the render loop using the derived scale factor.
+ * - Ensure coordinate mapping for multi-touch uses SDL3 fingerId tracking.
+ */
+  ANDROID_ONLY({
+    static struct {
+      float x;
+      float y;
+      bool active;
+    } fingers[2]                = {0};
 
-    app_vkchk(vkAllocateCommandBuffers(g_vkdev, &cb_ai, &uploadcb), "vkAllocateCommandBuffers");
+    static float start_distance = 0.0f;
+    static float start_zoom     = 1.0f;
+    static bool is_pinching     = false;
 
-    VkCommandBufferBeginInfo cb_bi = {
-        .sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO,
-        .flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT,
-    };
-    app_vkchk(vkBeginCommandBuffer(uploadcb, &cb_bi), "vkBeginCommandBuffer");
-
-    VkBuffer stagingbuf[APP_GAME_TEXTURE_ARRAY_COUNT]        = {};
-    VmaAllocation stagingalloc[APP_GAME_TEXTURE_ARRAY_COUNT] = {};
-
-    // UPLOAD EACH TEXTURE ARRAY
-    for (size_t i = 0; i < APP_GAME_TEXTURE_ARRAY_COUNT; ++i) {
-      // CREATE TEXTURE OBJECT
-      SDL_IOStream* io = SDL_IOFromFile(APP_GAME_TEXTURE_ARRAY_SOURCE_PATH[i], "rb");
-      if (!io) {
-        log_error("[app] SDL_IOFromFile: %s", SDL_GetError());
-        return false;
+    if (p_ev->type == SDL_EVENT_FINGER_DOWN ||  //
+        p_ev->type == SDL_EVENT_FINGER_MOTION) {
+      int idx = (int)p_ev->tfinger.fingerID - 1;
+      log_debug("[app] SDL_EVENT_FINGER_DOWN || SDL_EVENT_FINGER_MOTION: idx %d", idx);
+      if (idx < 2) {
+        fingers[idx].x      = p_ev->tfinger.x;
+        fingers[idx].y      = p_ev->tfinger.y;
+        fingers[idx].active = true;
       }
-
-      size_t filesz;
-      void* buf = SDL_LoadFile_IO(io, &filesz, true);
-      if (!buf) {
-        log_error("[app] SDL_LoadFile_IO: %s", SDL_GetError());
-        return false;
-      }
-      ktxTexture2* ptex    = NULL;
-      KTX_error_code texec = ktxTexture2_CreateFromMemory(  //
-          (const ktx_uint8_t*)buf,                          //
-          filesz,                                           //
-          KTX_TEXTURE_CREATE_LOAD_IMAGE_DATA_BIT,           //
-          &ptex                                             //
-      );
-      if (texec != KTX_SUCCESS) {
-        log_error(                                                        //
-            "[app] ktxTexture2_CreateFromMemory: %s:%s",                  //
-            APP_GAME_TEXTURE_ARRAY_SOURCE_PATH[i], ktxErrorString(texec)  //
-        );
-
-        return false;
-      }
-
-      log_debug("=============================================");
-      log_debug("[app] TEXTURE: %s", APP_GAME_TEXTURE_ARRAY_SOURCE_PATH[i]);
-      log_debug("[app] ptex: classId %d", ptex->classId);
-      log_debug("[app] ptex: vkFormat %d", ptex->vkFormat);
-      log_debug("[app] ptex: isArray ? %s", ptex->isArray ? "Yes" : "No");
-      log_debug("[app] ptex: isCompressed? %s", ptex->isCompressed ? "Yes" : "No");
-      log_debug("[app] ptex: dataSize %d", ptex->dataSize);
-      log_debug("[app] ptex: baseDepth %d", ptex->baseDepth);
-      log_debug("[app] ptex: numLayers %d", ptex->numLayers);
-      log_debug("[app] ptex: numLevels %d", ptex->numLevels);
-      log_debug("[app] ptex: baseWidth %d", ptex->baseWidth);
-      log_debug("[app] ptex: baseHeight %d", ptex->baseHeight);
-      log_debug("=============================================");
-
-      if (ktxTexture2_NeedsTranscoding(ptex)) {
-        log_debug("[app] ptex: need transcode %s", APP_GAME_TEXTURE_ARRAY_SOURCE_PATH[i]);
-        ktx_transcode_fmt_e tcodefmt = KTX_TTF_BC7_RGBA;
-
-        KTX_error_code tcodeec       = ktxTexture2_TranscodeBasis(ptex, tcodefmt, 0);
-
-        if (tcodeec != KTX_SUCCESS) {
-          log_error("[app] Failed to transcode UASTC texture: %s:%s",
-                    APP_GAME_TEXTURE_ARRAY_SOURCE_PATH[i], ktxErrorString(tcodeec));
-          return false;
-        }
-      }
-
-      VkImageCreateInfo img_ci = {
-          .sType     = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO,
-          .imageType = VK_IMAGE_TYPE_2D,
-          .format    = ptex->vkFormat,
-          .extent =
-              {
-                  .width  = ptex->baseWidth,
-                  .height = ptex->baseHeight,
-                  .depth  = 1,
-              },
-          .mipLevels =
-              APP_VK_MAIN_GAME_TEXTURE_ARRAY_MIPLEVELS,  // APP_VK_MAIN_GAME_TEXTURE_ARRAY_MIPLEVELS,
-          .arrayLayers   = ptex->numLayers,
-          .samples       = VK_SAMPLE_COUNT_1_BIT,
-          .tiling        = VK_IMAGE_TILING_OPTIMAL,
-          .usage         = VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT,
-          .initialLayout = VK_IMAGE_LAYOUT_UNDEFINED,
-      };
-
-      VmaAllocationCreateInfo alloc_ci = {.usage = VMA_MEMORY_USAGE_AUTO};
-      app_vkchk(vmaCreateImage(g_vkvma_allocator, &img_ci, &alloc_ci, &g_vkmain_game_texs[i].img,
-                               &g_vkmain_game_texs[i].alloc, NULL),
-                "vmaCreateImage");
-
-      VkImageViewCreateInfo imgv_ci = {
-          .sType    = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO,
-          .image    = g_vkmain_game_texs[i].img,
-          .viewType = VK_IMAGE_VIEW_TYPE_2D_ARRAY,
-          .format   = img_ci.format,
-          .subresourceRange =
-              {
-                  .aspectMask = VK_IMAGE_ASPECT_COLOR_BIT,
-                  .levelCount =
-                      APP_VK_MAIN_GAME_TEXTURE_ARRAY_MIPLEVELS,  // APP_VK_MAIN_GAME_TEXTURE_ARRAY_MIPLEVELS,
-                  .baseArrayLayer = 0,
-                  .layerCount     = ptex->numLayers,
-              },
-      };
-
-      app_vkchk(vkCreateImageView(g_vkdev, &imgv_ci, NULL, &g_vkmain_game_texs[i].view),
-                "vkCreateImageView");
-      g_vkmain_game_texs[i].layer_count = ptex->numLayers;
-
-      // UPLOAD
-      {
-
-        VkBufferCreateInfo buf_ci = {
-            .sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO,
-            .size  = ptex->dataSize,
-            .usage = VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
-        };
-        VmaAllocationCreateInfo vma_aci = {
-            .flags = (VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT |
-                      VMA_ALLOCATION_CREATE_MAPPED_BIT),
-            .usage = VMA_MEMORY_USAGE_AUTO,
-        };
-        VmaAllocationInfo vma_ai = {};
-
-        app_vkchk(vmaCreateBuffer(g_vkvma_allocator, &buf_ci, &vma_aci, &stagingbuf[i],
-                                  &stagingalloc[i], &vma_ai),
-                  "vmaCreateBuffer");
-
-        memcpy(vma_ai.pMappedData, ptex->pData, ptex->dataSize);
-
-        // SOURCE TO STAGING
-        VkImageMemoryBarrier2 teximg_barrier = {
-            .sType         = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER_2,
-            .dstStageMask  = VK_PIPELINE_STAGE_2_TRANSFER_BIT,
-            .dstAccessMask = VK_ACCESS_2_TRANSFER_WRITE_BIT,
-            .oldLayout     = VK_IMAGE_LAYOUT_UNDEFINED,
-            .newLayout     = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
-            .image         = g_vkmain_game_texs[i].img,
-            .subresourceRange =
-                {
-                    .aspectMask = VK_IMAGE_ASPECT_COLOR_BIT,
-                    .levelCount = APP_VK_MAIN_GAME_TEXTURE_ARRAY_MIPLEVELS,
-                    .layerCount = ptex->numLayers,
-                },
-        };
-
-        VkDependencyInfo teximg_di = {
-            .sType                   = VK_STRUCTURE_TYPE_DEPENDENCY_INFO,
-            .imageMemoryBarrierCount = 1,
-            .pImageMemoryBarriers    = &teximg_barrier,
-        };
-
-        // COPY DATA TO SHADER
-        vkCmdPipelineBarrier2(uploadcb, &teximg_di);
-
-        uint32_t region_count = APP_VK_MAIN_GAME_TEXTURE_ARRAY_MIPLEVELS;
-        VkBufferImageCopy2* cpregions =
-            (VkBufferImageCopy2*)SDL_calloc(region_count, sizeof(VkBufferImageCopy2));
-
-        for (uint32_t lv = 0; lv < APP_VK_MAIN_GAME_TEXTURE_ARRAY_MIPLEVELS; ++lv) {
-          ktx_size_t offset = 0;
-          ktxTexture2_GetImageOffset(ptex, lv, 0, 0, &offset);
-
-          uint32_t mipw = SDL_max(1, ptex->baseWidth >> lv);
-          uint32_t miph = SDL_max(1, ptex->baseHeight >> lv);
-
-          cpregions[lv] = (VkBufferImageCopy2){
-              .sType        = VK_STRUCTURE_TYPE_BUFFER_IMAGE_COPY_2,
-              .bufferOffset = offset,
-              .imageSubresource =
-                  {
-                      .aspectMask     = VK_IMAGE_ASPECT_COLOR_BIT,
-                      .mipLevel       = lv,
-                      .baseArrayLayer = 0,
-                      .layerCount     = ptex->numLayers,
-                  },
-              .imageExtent =
-                  {
-                      .width  = mipw,
-                      .height = miph,
-                      .depth  = 1,
-                  },
-
-          };
-        }
-
-        VkCopyBufferToImageInfo2 cpinfo = {
-            .sType          = VK_STRUCTURE_TYPE_COPY_BUFFER_TO_IMAGE_INFO_2,
-            .srcBuffer      = stagingbuf[i],
-            .dstImage       = g_vkmain_game_texs[i].img,
-            .dstImageLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
-            .regionCount    = region_count,
-            .pRegions       = cpregions,
-        };
-
-        vkCmdCopyBufferToImage2(uploadcb, &cpinfo);
-
-        // STAGING TO SHADER
-        VkImageMemoryBarrier2 texread_barrier = {
-            .sType         = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER_2,
-            .srcStageMask  = VK_PIPELINE_STAGE_2_TRANSFER_BIT,
-            .srcAccessMask = VK_ACCESS_2_TRANSFER_WRITE_BIT,
-            .dstStageMask  = VK_PIPELINE_STAGE_2_FRAGMENT_SHADER_BIT,
-            .dstAccessMask = VK_ACCESS_2_SHADER_READ_BIT,
-            .oldLayout     = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
-            .newLayout     = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
-            .image         = g_vkmain_game_texs[i].img,
-            .subresourceRange =
-                {
-                    .aspectMask = VK_IMAGE_ASPECT_COLOR_BIT,
-                    .levelCount = APP_VK_MAIN_GAME_TEXTURE_ARRAY_MIPLEVELS,
-                    .layerCount = ptex->numLayers,
-                },
-        };
-
-        VkDependencyInfo texread_di = {
-            .sType                   = VK_STRUCTURE_TYPE_DEPENDENCY_INFO,
-            .imageMemoryBarrierCount = 1,
-            .pImageMemoryBarriers    = &texread_barrier,
-        };
-
-        vkCmdPipelineBarrier2(uploadcb, &texread_di);
-
-        SDL_free(cpregions);
-      }
-
-      ktxTexture2_Destroy(ptex);
-      SDL_free(buf);
+    } else if (p_ev->type == SDL_EVENT_FINGER_UP) {
+      int idx = (int)p_ev->tfinger.fingerID - 1;
+      log_debug("[app] SDL_EVENT_FINGER_UP: idx %d", idx);
+      if (idx < 2)
+        fingers[idx].active = false;
     }
 
-    app_vkchk(vkEndCommandBuffer(uploadcb), "vkEndCommandBuffer");
-    VkSubmitInfo si = {
-        .sType              = VK_STRUCTURE_TYPE_SUBMIT_INFO,
-        .commandBufferCount = 1,
-        .pCommandBuffers    = &uploadcb,
-    };
-    app_vkchk(vkQueueSubmit(g_vkqueue, 1, &si, uploadfnc), "vkQueueSubmit");
-    app_vkchk(vkWaitForFences(g_vkdev, 1, &uploadfnc, VK_TRUE, UINT64_MAX), "vkWaitForFences");
+    if (fingers[0].active && fingers[1].active && !is_pinching) {
+      is_pinching    = true;
+      start_zoom     = g_game_cam.zoom;
 
-    // INIT DESCRIPTOR
-    VkSampler texsampler;
-    VkSamplerCreateInfo sampler_ci = {
-        .sType        = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO,
-        .magFilter    = VK_FILTER_LINEAR,
-        .minFilter    = VK_FILTER_LINEAR,
-        .addressModeU = VK_SAMPLER_ADDRESS_MODE_REPEAT,
-        .addressModeV = VK_SAMPLER_ADDRESS_MODE_REPEAT,
-        .mipmapMode   = VK_SAMPLER_MIPMAP_MODE_LINEAR,
-    };
-    app_vkchk(vkCreateSampler(g_vkdev, &sampler_ci, NULL, &texsampler), "vkCreateSampler");
+      float dx       = fingers[0].x - fingers[1].x;
+      float dy       = fingers[0].y - fingers[1].y;
+      start_distance = sqrt(dx * dx + dy * dy);
 
-    for (size_t i = 0; i < APP_GAME_TEXTURE_ARRAY_COUNT; ++i) {
-      VkDescriptorImageInfo dsetimginfo = {
-          .sampler     = texsampler,
-          .imageView   = g_vkmain_game_texs[i].view,
-          .imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
-      };
+      log_debug("[app] fingers is_pinching: start_distance %f ", start_distance);
+    }
 
-      // DOUBLE BUFFER UPDATE
-      for (size_t frame = 0; frame < APP_VK_MAX_FIFO; ++frame) {
-        VkWriteDescriptorSet wdset = {
-            .sType           = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
-            .dstSet          = g_vkmain_game_data[frame].dset,
-            .dstBinding      = 1,
-            .dstArrayElement = (uint32_t)i,
-            .descriptorCount = 1,
-            .descriptorType  = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
-            .pImageInfo      = &dsetimginfo,
-        };
+    if (is_pinching && fingers[0].active && fingers[1].active) {
+      float dx           = fingers[0].x - fingers[1].x;
+      float dy           = fingers[0].y - fingers[1].y;
+      float cur_distance = sqrtf(dx * dx + dy * dy);
 
-        vkUpdateDescriptorSets(g_vkdev, 1, &wdset, 0, NULL);
+      log_debug("[app] fingers start zoom: cur_distance %f ", cur_distance);
+      // Prevent division by zero
+      if (start_distance > 0.001f) {
+        // The ratio of current distance to start distance
+        float ratio = cur_distance / start_distance;
+
+        // Multiply original zoom by ratio to get the new zoom
+        g_game_cam.zoom = APP_UTIL_CLAMP(start_zoom * ratio, 1.0f, 4.0f);
+
+        log_debug("[app] fingers is_pinching: ratio %f ", ratio);
       }
+    } else {
+      is_pinching = false;
     }
-
-    // CLEANUP STAGING BUFFER
-    for (size_t i = 0; i < APP_GAME_TEXTURE_ARRAY_COUNT; ++i) {
-      vmaDestroyBuffer(g_vkvma_allocator, stagingbuf[i], stagingalloc[i]);
-    }
-
-    vkFreeCommandBuffers(g_vkdev, g_vkcp, 1, &uploadcb);
-    vkDestroyFence(g_vkdev, uploadfnc, NULL);
-  }
+  });
 
   return true;
 }

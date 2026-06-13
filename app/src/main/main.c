@@ -47,11 +47,12 @@ SDL_AppResult SDL_AppInit(void** pp_as, int argc, char* argv[]) {
 
   app_chk(app_vkinit_descriptor_layout(), "app_vkinit_descriptor_pool");
 
-  app_chk(app_vkinit_mesh_assets(), "app_vkinit_mesh_assets");
-  app_chk(app_vkinit_tex_assets(), "app_vkinit_tex_assets");
-
   app_chk(app_vkinit_shader(), "app_vkinit_shader");
   app_chk(app_vkinit_pipeline(), "app_vkinit_pipeline");
+
+  app_chk(app_vkinit_render_data(), "app_vkinit_render_data");
+  app_chk(app_vkinit_mesh_assets(), "app_vkinit_mesh_assets");
+  app_chk(app_vkinit_tex_assets(), "app_vkinit_tex_assets");
 #endif  //APP_USE_VK
 
   app_chk(app_gameinit(), "app_gameinit");
@@ -73,6 +74,8 @@ SDL_AppResult SDL_AppEvent(void* p_as, SDL_Event* p_ev) {
     default:
       break;
   }
+
+  app_gameev_camera_control(p_ev);
 
 #ifdef APP_USE_VK
   if (!app_vkhandle_event(p_ev)) {

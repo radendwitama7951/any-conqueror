@@ -17,5 +17,9 @@ layout(set = 0, binding = 1) uniform sampler2DArray u_texs[];
 void main() {
   vec4 tex_color = texture(u_texs[nonuniformEXT(v_texslot)], vec3(v_texuv, v_texid));
 
-  out_color = tex_color * v_color;
+  vec4 linear_color = tex_color * v_color;
+
+  vec3 srgb_color = pow(linear_color.rgb, vec3(1.0 / 2.2));
+
+  out_color = vec4(srgb_color, linear_color.a);
 }

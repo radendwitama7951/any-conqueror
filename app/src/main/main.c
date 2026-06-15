@@ -6,6 +6,7 @@
 #ifdef APP_USE_VK
 #define VOLK_IMPLEMENTATION
 #include <volk.h>
+#include "vkgui.h"
 #endif  // APP_USE_VK
 
 #include "global.h"
@@ -25,6 +26,7 @@ SDL_AppResult SDL_AppInit(void** pp_as, int argc, char* argv[]) {
   }
 
   SDL_WindowFlags wdowflags = 0;
+  // DESKTOP_ONLY({ wdowflags |= SDL_WINDOW_RESIZABLE; })
 
 #ifdef APP_USE_VK
   app_vkinit_device();
@@ -53,7 +55,13 @@ SDL_AppResult SDL_AppInit(void** pp_as, int argc, char* argv[]) {
   app_chk(app_vkinit_render_data(), "app_vkinit_render_data");
   app_chk(app_vkinit_mesh_assets(), "app_vkinit_mesh_assets");
   app_chk(app_vkinit_tex_assets(), "app_vkinit_tex_assets");
+  app_chk(app_vkgui_init(), "app_vkinitgui");
+
 #endif  //APP_USE_VK
+
+  g_appctx = (app_ctx_t){
+      .clrscr = {0.12156862745098039215f, 0.12156862745098039215f, 0.12156862745098039215f},
+  };
 
   app_chk(app_gameinit(), "app_gameinit");
 

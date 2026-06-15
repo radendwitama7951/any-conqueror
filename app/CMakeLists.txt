@@ -42,6 +42,16 @@ if(NOT EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/extern/rxi_log/)
   FetchContent_MakeAvailable(rxi_log)
 endif()
 
+
+include(FetchContent)
+FetchContent_Declare(
+  imgui
+  SUBDIR_SOURCE ""
+  DOWNLOAD_EXTRACT_TIMESTAMP ON #
+  URL https://github.com/ocornut/imgui/archive/refs/tags/v1.92.8.tar.gz
+)
+FetchContent_MakeAvailable(imgui)
+
 if(ANDROID)
   add_library(${APP} SHARED)
 
@@ -81,25 +91,54 @@ set_target_properties(
 target_sources(
   ${APP}
   PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src/main/main.c
+          ${CMAKE_CURRENT_SOURCE_DIR}/src/main/vkgui.cpp
           ${CMAKE_CURRENT_SOURCE_DIR}/src/main/vma_impl.cpp
+          ${CMAKE_CURRENT_SOURCE_DIR}/src/main/app_gui.cpp
+
+
+
           ${CMAKE_CURRENT_SOURCE_DIR}/extern/rxi_log/src/log.c
-  PRIVATE FILE_SET HEADERS BASE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/src/
-          ${CMAKE_CURRENT_SOURCE_DIR}/extern/rxi_log/src/
-          $<$<PLATFORM_ID:Linux>:${ktx_linux_x86_64_SOURCE_DIR}/include>
+
+          ${imgui_SOURCE_DIR}/imgui.cpp 
+          ${imgui_SOURCE_DIR}/imgui_demo.cpp 
+          ${imgui_SOURCE_DIR}/imgui_draw.cpp 
+          ${imgui_SOURCE_DIR}/imgui_tables.cpp 
+          ${imgui_SOURCE_DIR}/imgui_widgets.cpp 
+
+          ${imgui_SOURCE_DIR}/backends/imgui_impl_sdl3.cpp 
+          ${imgui_SOURCE_DIR}/backends/imgui_impl_vulkan.cpp 
+
+  PRIVATE 
+  FILE_SET 
+  HEADERS 
+  BASE_DIRS 
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/
+    ${CMAKE_CURRENT_SOURCE_DIR}/extern/rxi_log/src/
+    $<$<PLATFORM_ID:Linux>:${ktx_linux_x86_64_SOURCE_DIR}/include>
+    ${imgui_SOURCE_DIR}
 )
 
 target_compile_definitions(
-  ${APP} PRIVATE LOG_USE_COLOR APP_USE_VK APP_NAME="${APP}"
-                 APP_ASSETS_SOURCE_DIR="${APP_ASSETS_SOURCE_DIR}/")
+  ${APP} 
+    PRIVATE APP_NAME="${APP}"
+            APP_ASSETS_SOURCE_DIR="${APP_ASSETS_SOURCE_DIR}/"
+            LOG_USE_COLOR 
+            APP_USE_VK 
+            IMGUI_IMPL_VULKAN_USE_VOLK
+            VK_NO_PROTOTYPES
+)
 target_compile_options(
   ${APP}
-  PRIVATE -Wno-deprecated-declarations
-          -Wno-nullability-completeness # ignore clang warning on vma library
+    PRIVATE -Wno-deprecated-declarations
+            -Wno-nullability-completeness # ignore clang warning on vma library
+            -Wno-initializer-overrides
 )
 target_link_libraries(
-  ${APP} PRIVATE m SDL3::SDL3 volk::volk_headers VulkanMemoryAllocator
-                 $<$<PLATFORM_ID:Android>:log>
-          $<$<PLATFORM_ID:Linux>:${ktx_linux_x86_64_SOURCE_DIR}/lib/libktx.so>
+  ${APP} 
+    PRIVATE m 
+            SDL3::SDL3 volk::volk_headers VulkanMemoryAllocator
+            $<$<PLATFORM_ID:Android>:log>
+            $<$<PLATFORM_ID:Linux>:${ktx_linux_x86_64_SOURCE_DIR}/lib/libktx.so>
 )
 
 add_custom_target(

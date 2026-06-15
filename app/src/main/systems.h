@@ -5,17 +5,24 @@
 #include <stdbool.h>
 
 #include <SDL3/SDL.h>
-#include <SDL3/SDL_vulkan.h>
-#include <volk.h>
 
 #include <ktx.h>
-#include <ktxvulkan.h>
-#include <vk_mem_alloc.h>
 
 #include "global.h"
 #include "utils.h"
 
 #include "components.h"
+
+#ifdef APP_USE_VK
+#include <SDL3/SDL_vulkan.h>
+#include <volk.h>
+//
+#include <ktxvulkan.h>
+#include <vk_mem_alloc.h>
+#include "vkgui.h"
+#endif  // APP_USE_VK
+
+#include "app_gui.h"
 
 /*
  * 
@@ -47,23 +54,23 @@ bool app_vkinit_device() {
   volkLoadInstance(g_vkinst);
 
   // INIT PHYSICAL DEVICE
-  g_vkdevs_cnt = APP_VK_MAX_PDEVS;
-  app_vkchk(vkEnumeratePhysicalDevices(g_vkinst, &g_vkdevs_cnt, NULL),
+  g_vkphydevs_cnt = APP_VK_MAX_PDEVS;
+  app_vkchk(vkEnumeratePhysicalDevices(g_vkinst, &g_vkphydevs_cnt, NULL),
             "vkEnumeratePhysicalDevices");
-  log_info("Vk Physical Device Count: %d", g_vkdevs_cnt);
-  app_chk(g_vkdevs_cnt < APP_VK_MAX_PDEVS, "g_vkdevs_cnt < APP_VK_MAX_PDEVS");
-  app_vkchk(vkEnumeratePhysicalDevices(g_vkinst, &g_vkdevs_cnt, g_vkdevs),
+  log_info("Vk Physical Device Count: %d", g_vkphydevs_cnt);
+  app_chk(g_vkphydevs_cnt < APP_VK_MAX_PDEVS, "g_vkphydevs_cnt < APP_VK_MAX_PDEVS");
+  app_vkchk(vkEnumeratePhysicalDevices(g_vkinst, &g_vkphydevs_cnt, g_vkphydevs),
             "vkEnumeratePhysicalDevices");
-  g_vkdev_idx                           = 0;
+  g_vkphydev_idx                        = 0;
 
   VkPhysicalDeviceProperties2 dev_props = {.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PROPERTIES_2};
-  vkGetPhysicalDeviceProperties2(g_vkdevs[g_vkdev_idx], &dev_props);
+  vkGetPhysicalDeviceProperties2(g_vkphydevs[g_vkphydev_idx], &dev_props);
 
   // INIT QUEUE
   uint32_t g_vkq_fam_cnt = {0};
-  vkGetPhysicalDeviceQueueFamilyProperties(g_vkdevs[g_vkdev_idx], &g_vkq_fam_cnt, NULL);
+  vkGetPhysicalDeviceQueueFamilyProperties(g_vkphydevs[g_vkphydev_idx], &g_vkq_fam_cnt, NULL);
   VkQueueFamilyProperties g_vkq_fams[g_vkq_fam_cnt];
-  vkGetPhysicalDeviceQueueFamilyProperties(g_vkdevs[g_vkdev_idx], &g_vkq_fam_cnt, g_vkq_fams);
+  vkGetPhysicalDeviceQueueFamilyProperties(g_vkphydevs[g_vkphydev_idx], &g_vkq_fam_cnt, g_vkq_fams);
 
   // uint32_t
   g_vkq_fam = 0;
@@ -74,7 +81,7 @@ bool app_vkinit_device() {
     }
   }
 
-  app_chk(SDL_Vulkan_GetPresentationSupport(g_vkinst, g_vkdevs[g_vkdev_idx], g_vkq_fam),
+  app_chk(SDL_Vulkan_GetPresentationSupport(g_vkinst, g_vkphydevs[g_vkphydev_idx], g_vkq_fam),
           "SDL_Vulkan_GetPresentationSupport");
 
   const float q_pri            = {1.0f};
@@ -118,7 +125,7 @@ bool app_vkinit_device() {
       .ppEnabledExtensionNames = dev_exts,
       .pEnabledFeatures        = &vk10_f,
   };
-  app_vkchk(vkCreateDevice(g_vkdevs[g_vkdev_idx], &dev_ci, NULL, &g_vkdev), "vkCreateDevice");
+  app_vkchk(vkCreateDevice(g_vkphydevs[g_vkphydev_idx], &dev_ci, NULL, &g_vkdev), "vkCreateDevice");
   vkGetDeviceQueue(g_vkdev, g_vkq_fam, 0, &g_vkqueue);
 
   // INIT VMA
@@ -148,7 +155,7 @@ bool app_vkinit_device() {
 
   VmaAllocatorCreateInfo vma_ci = {
       .flags            = VMA_ALLOCATOR_CREATE_BUFFER_DEVICE_ADDRESS_BIT,
-      .physicalDevice   = g_vkdevs[g_vkdev_idx],
+      .physicalDevice   = g_vkphydevs[g_vkphydev_idx],
       .device           = g_vkdev,
       .pVulkanFunctions = &vma_vk_fn,
       .instance         = g_vkinst,
@@ -169,7 +176,7 @@ bool app_vkinit_surface() {
   app_chk(SDL_Vulkan_CreateSurface(g_pmainwdow, g_vkinst, NULL, &g_vksurface), SDL_GetError());
   // app_chk(SDL_GetWindowSize(g_pmainwdow, APP_MAIN_WINDOW_WIDTH, APP_MAIN_WINDOW_HEIGHT), SDL_GetError());
   log_info("SDL window size: %dpx x %dpx", APP_MAIN_WINDOW_WIDTH, APP_MAIN_WINDOW_HEIGHT);
-  app_vkchk(vkGetPhysicalDeviceSurfaceCapabilitiesKHR(g_vkdevs[g_vkdev_idx], g_vksurface,
+  app_vkchk(vkGetPhysicalDeviceSurfaceCapabilitiesKHR(g_vkphydevs[g_vkphydev_idx], g_vksurface,
                                                       &g_vksurface_capas),
             "vkGetPhysicalDeviceSurfaceCapabilitiesKHR");
 
@@ -188,7 +195,8 @@ bool app_vkinit_swapchain() {
     swp_ext = (VkExtent2D){.width  = (uint32_t)APP_MAIN_WINDOW_WIDTH,
                            .height = (uint32_t)APP_MAIN_WINDOW_HEIGHT};
   }
-  g_vkimg_fmt = VK_FORMAT_B8G8R8A8_SRGB;
+  // g_vkimg_fmt = VK_FORMAT_B8G8R8A8_SRGB; // ImGUI color would off
+  g_vkimg_fmt = VK_FORMAT_B8G8R8A8_UNORM;  // Change to this because ImGUI
   g_vksc_ci   = (VkSwapchainCreateInfoKHR){
       .sType            = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR,
       .surface          = g_vksurface,
@@ -1099,6 +1107,7 @@ bool app_vkinit_tex_assets() {
  *
  * */
 bool app_vkhandle_event(SDL_Event* p_ev) {
+  app_vkgui_event(p_ev);
   return true;
 }
 
@@ -1181,12 +1190,18 @@ bool app_vkbegin_render() {
       .colorAttachmentCount = 1,
       .pColorAttachments    = &col_atchi,
   };
+
+  // BEGIN RENDER
   vkCmdBeginRendering(cb, &ri);
+  app_vkgui_begin();
 
   // vkCmdDraw(cb, 3, 1, 0, 0);
   vkCmdDraw(cb, 6, g_game_object_count, 0, 0);
 
-  // End Rendering
+  app_guidraw_demo(&g_appctx);
+
+  // END RENDER
+  app_vkgui_end(&cb);
   vkCmdEndRendering(cb);
 
   // Barrier: Transition to PRESENT_SRC_KHR so the screen can show it
@@ -1235,6 +1250,9 @@ bool app_vkbegin_render() {
 bool app_vkdestroy() {
 
   app_vkchk(vkDeviceWaitIdle(g_vkdev), "vkDeviceWaitIdle");
+
+  // DESTROY GUI
+  app_chk(app_vkgui_destroy(), "app_vkgui_destroy");
 
   vkDestroyShaderModule(g_vkdev, g_vkmainvshdrm, NULL);
   vkDestroyShaderModule(g_vkdev, g_vkmainfshdrm, NULL);
@@ -1295,9 +1313,13 @@ bool app_gameev_camera_control(const SDL_Event* p_ev) {
   static float lastmousex = 0;
   static float lastmousey = 0;
 
-  const float zoom        = g_game_cam.zoom;
-  const float camx        = g_game_cam.posx;
-  const float camy        = g_game_cam.posy;
+  if (app_guiwant_capture_mouse()) {
+    return true;
+  }
+
+  const float zoom = g_game_cam.zoom;
+  const float camx = g_game_cam.posx;
+  const float camy = g_game_cam.posy;
 
   if (p_ev->type == SDL_EVENT_MOUSE_BUTTON_DOWN) {
     isdragging = true;

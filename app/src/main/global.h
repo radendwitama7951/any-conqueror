@@ -3,14 +3,18 @@
 #include <SDL3/SDL.h>
 
 #include <volk.h>
-
+//
 #include <vk_mem_alloc.h>
 
-#define APP_MAIN_WINDOW_SCALE .5f
+#include "app_ctx.h"
+
+#define APP_MAIN_WINDOW_SCALE 1.f
 #define APP_MAIN_WINDOW_WIDTH (1920 * APP_MAIN_WINDOW_SCALE)
 #define APP_MAIN_WINDOW_HEIGHT (1080 * APP_MAIN_WINDOW_SCALE)
 
 SDL_Window* g_pmainwdow;
+
+app_ctx_t g_appctx;
 
 /*
  * GAME
@@ -19,6 +23,9 @@ SDL_Window* g_pmainwdow;
 #define APP_GAME_GRID_MAX_COL 32
 #define APP_GAME_GRID_MAX_ROW 16
 #define APP_GAME_GRID_TILE_COUNT (APP_GAME_GRID_MAX_COL * APP_GAME_GRID_MAX_ROW)
+
+#define APP_GAME_GRID_DIMENSION_X (1920 * APP_MAIN_WINDOW_SCALE)
+#define APP_GAME_GRID_DIMENSION_Y (1080 * APP_MAIN_WINDOW_SCALE)
 
 #define APP_GAME_TEXTURE_ARRAY_COUNT 2
 const char* APP_GAME_TEXTURE_ARRAY_SOURCE_PATH[] = {
@@ -87,11 +94,11 @@ static app_game_camera_data_t g_game_cam = {
     .resoh = 1080,
 };
 
-#define APP_GAME_TILE_RADIUS_SCALE 1.0
-#define APP_GAME_TILE_INRADIUS_SCALE 0.866
+#define APP_GAME_TILE_RADIUS_SCALE (1.0 / 2.f)
+#define APP_GAME_TILE_INRADIUS_SCALE (0.866 / 2.f)
 
-#define APP_GAME_TILE_SCALE_X (77.942f * 0.5 * APP_MAIN_WINDOW_SCALE)
-#define APP_GAME_TILE_SCALE_Y (77.942f * 0.5 * APP_MAIN_WINDOW_SCALE)
+#define APP_GAME_TILE_SCALE_X (77.942f * APP_MAIN_WINDOW_SCALE)
+#define APP_GAME_TILE_SCALE_Y (77.942f * APP_MAIN_WINDOW_SCALE)
 
 #define APP_GAME_TILE_RADIUS (APP_GAME_TILE_RADIUS_SCALE * APP_GAME_TILE_SCALE_X)
 #define APP_GAME_TILE_INRADIUS (APP_GAME_TILE_INRADIUS_SCALE * APP_GAME_TILE_SCALE_Y)
@@ -119,9 +126,10 @@ static app_game_camera_data_t g_game_cam = {
 #define APP_VK_MAX_TEXTURES 128
 
 VkInstance g_vkinst;
-VkPhysicalDevice g_vkdevs[APP_VK_MAX_PDEVS];
-uint32_t g_vkdevs_cnt;
-uint32_t g_vkdev_idx;
+VkPhysicalDevice g_vkphydevs[APP_VK_MAX_PDEVS];
+uint32_t g_vkphydevs_cnt;
+uint32_t g_vkphydev_idx;
+
 VkDevice g_vkdev;
 
 VkQueue g_vkqueue;
@@ -160,6 +168,8 @@ uint32_t g_vkimg_cnt;
 
 uint32_t g_vkq_fam;
 
+VkDescriptorPool g_vkguidsetpool;
+
 // RESOURCES
 /*
  * DESCRIPTOR SET (VERTEX ATTRIBUTE) // UNUSED
@@ -170,7 +180,7 @@ uint32_t g_vkq_fam;
  * DESCRIPTOR SET (VERTEX ATTRIBUTE) SSBOs
  * 
  * */
-#define APP_VK_MAIN_GAME_DATA_BUFFER_SZ (APP_GAME_RENDER_DATA_SZ * APP_GAME_GRID_TILE_COUNT)
+#define APP_VK_MAIN_GAME_DATA_BUFFER_SZ (3 * APP_GAME_RENDER_DATA_SZ * APP_GAME_GRID_TILE_COUNT)
 
 typedef struct {
   VkBuffer ssbobuf;

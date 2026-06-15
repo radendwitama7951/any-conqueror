@@ -15,6 +15,8 @@
 #include "global.h"
 #include "utils.h"
 
+#include "components.h"
+
 /*
  * 
  * app_vkinit_device
@@ -100,6 +102,7 @@ bool app_vkinit_device() {
   };
   VkPhysicalDeviceFeatures vk10_f = {
       .samplerAnisotropy = VK_TRUE,
+
   };
 
   DESKTOP_ONLY({ vk10_f.textureCompressionBC = VK_TRUE; })
@@ -640,7 +643,8 @@ bool app_vkinit_render_data() {
   }
 
   // ADD INSTANCE
-  app_game_render_data_t tiles[] = {
+  app_game_render_data_t static_data[] = {
+      // BACKGROUND
       (app_game_render_data_t){
           .coordx  = 0.f,
           .coordy  = 0.f,
@@ -661,6 +665,49 @@ bool app_vkinit_render_data() {
           .texslot = 0,
           .texid   = 1,
       },
+
+  };
+
+  const size_t GAME_COL = APP_GAME_GRID_MAX_COL;
+  const size_t GAME_ROW = APP_GAME_GRID_MAX_ROW;
+
+  app_game_render_data_t tiles_data[GAME_COL * GAME_ROW];
+
+  // EXPECTED HEXAGON GRID
+  for (size_t col = 0; col < GAME_COL; ++col) {
+    for (size_t row = 0; row < GAME_ROW; ++row) {
+
+      float x                 = 3. / 2. * col;
+      float y                 = SDL_sqrt(3) * (row + .5f * (col & 1));
+
+      x                       = x * APP_GAME_TILE_RADIUS;
+      y                       = y * APP_GAME_TILE_RADIUS;
+
+      size_t idx              = (col * GAME_ROW) + row;
+
+      tiles_data[idx].coordx  = col;
+      tiles_data[idx].coordy  = row;
+      tiles_data[idx].colorr  = .15f;
+      tiles_data[idx].colorg  = .15f;
+      tiles_data[idx].colorb  = .15f;
+      tiles_data[idx].colora  = 1.f;
+      tiles_data[idx].scalex  = APP_GAME_TILE_SCALE_X;
+      tiles_data[idx].scaley  = APP_GAME_TILE_SCALE_Y;
+      tiles_data[idx].rot     = 0.f;
+      tiles_data[idx].transx  = x - ((APP_GAME_GRID_DIMENSION_X / 2.f) - APP_GAME_TILE_RADIUS);
+      tiles_data[idx].transy  = y - ((APP_GAME_GRID_DIMENSION_Y / 2.f) - APP_GAME_TILE_INRADIUS);
+      tiles_data[idx].texslot = 1;
+      tiles_data[idx].texid   = 1;
+
+      log_debug("=============================");
+      log_debug("[app] tiles_data[%zu]: ", idx);
+      log_debug("[app] coordx: %zu coordy: %zu ", col, row);
+      log_debug("[app] transx: %f transy: %f ", tiles_data[idx].transx, tiles_data[idx].transy);
+    }
+  }
+
+  app_game_render_data_t units_data[] = {
+      // UNITS DEBUG
       (app_game_render_data_t){
           .coordx  = 0.f,
           .coordy  = 0.f,
@@ -681,11 +728,40 @@ bool app_vkinit_render_data() {
           .texslot = 1,
           .texid   = 2,
       },
+
+      (app_game_render_data_t){
+          .coordx  = 0.f,
+          .coordy  = 0.f,
+
+          .colorr  = 1.f,
+          .colorg  = 1.0f,
+          .colorb  = 1.f,
+          .colora  = 1.f,
+
+          .scalex  = 80.f,
+          .scaley  = 120.f,
+
+          .rot     = 0.f,
+
+          .transx  = 500.f,
+          .transy  = 100.f,
+
+          .texslot = 1,
+          .texid   = 3,
+      },
   };
 
   // DOUBLE BUFFER
-  memcpy(game_data_mapped_data[0], tiles, sizeof(tiles));
-  memcpy(game_data_mapped_data[1], tiles, sizeof(tiles));
+  for (size_t i = 0; i < APP_VK_MAX_FIFO; ++i) {
+    memcpy(game_data_mapped_data[i], static_data, sizeof(static_data));
+    memcpy(game_data_mapped_data[i] + SDL_arraysize(static_data), tiles_data, sizeof(tiles_data));
+    memcpy(game_data_mapped_data[i] + SDL_arraysize(static_data) + SDL_arraysize(tiles_data),
+           units_data, sizeof(units_data));
+  }
+
+  g_game_object_count +=
+      SDL_arraysize(static_data) + SDL_arraysize(tiles_data) + SDL_arraysize(units_data);
+  log_debug("[app] draw %d instances", g_game_object_count);
 
   return true;
 }
@@ -799,8 +875,7 @@ bool app_vkinit_tex_assets() {
                 .height = ptex->baseHeight,
                 .depth  = 1,
             },
-        .mipLevels =
-            APP_VK_MAIN_GAME_TEXTURE_ARRAY_MIPLEVELS,  // APP_VK_MAIN_GAME_TEXTURE_ARRAY_MIPLEVELS,
+        .mipLevels     = ptex->numLevels,  // APP_VK_MAIN_GAME_TEXTURE_ARRAY_MIPLEVELS,
         .arrayLayers   = ptex->numLayers,
         .samples       = VK_SAMPLE_COUNT_1_BIT,
         .tiling        = VK_IMAGE_TILING_OPTIMAL,
@@ -818,11 +893,12 @@ bool app_vkinit_tex_assets() {
         .image    = g_vkmain_game_texs[i].img,
         .viewType = VK_IMAGE_VIEW_TYPE_2D_ARRAY,
         .format   = img_ci.format,
+        // .format = VK_FORMAT_BC7_RGBA_SRGB_BLOCK,
         .subresourceRange =
             {
-                .aspectMask = VK_IMAGE_ASPECT_COLOR_BIT,
-                .levelCount =
-                    APP_VK_MAIN_GAME_TEXTURE_ARRAY_MIPLEVELS,  // APP_VK_MAIN_GAME_TEXTURE_ARRAY_MIPLEVELS,
+                .aspectMask     = VK_IMAGE_ASPECT_COLOR_BIT,
+                .baseMipLevel   = 0,
+                .levelCount     = ptex->numLevels,
                 .baseArrayLayer = 0,
                 .layerCount     = ptex->numLayers,
             },
@@ -864,7 +940,7 @@ bool app_vkinit_tex_assets() {
           .subresourceRange =
               {
                   .aspectMask = VK_IMAGE_ASPECT_COLOR_BIT,
-                  .levelCount = APP_VK_MAIN_GAME_TEXTURE_ARRAY_MIPLEVELS,
+                  .levelCount = ptex->numLevels,
                   .layerCount = ptex->numLayers,
               },
       };
@@ -878,11 +954,11 @@ bool app_vkinit_tex_assets() {
       // COPY DATA TO SHADER
       vkCmdPipelineBarrier2(uploadcb, &teximg_di);
 
-      uint32_t region_count = APP_VK_MAIN_GAME_TEXTURE_ARRAY_MIPLEVELS;
+      uint32_t region_count = ptex->numLevels;
       VkBufferImageCopy2* cpregions =
           (VkBufferImageCopy2*)SDL_calloc(region_count, sizeof(VkBufferImageCopy2));
 
-      for (uint32_t lv = 0; lv < APP_VK_MAIN_GAME_TEXTURE_ARRAY_MIPLEVELS; ++lv) {
+      for (uint32_t lv = 0; lv < ptex->numLevels; ++lv) {
         ktx_size_t offset = 0;
         ktxTexture2_GetImageOffset(ptex, lv, 0, 0, &offset);
 
@@ -933,7 +1009,7 @@ bool app_vkinit_tex_assets() {
           .subresourceRange =
               {
                   .aspectMask = VK_IMAGE_ASPECT_COLOR_BIT,
-                  .levelCount = APP_VK_MAIN_GAME_TEXTURE_ARRAY_MIPLEVELS,
+                  .levelCount = ptex->numLevels,
                   .layerCount = ptex->numLayers,
               },
       };
@@ -965,12 +1041,21 @@ bool app_vkinit_tex_assets() {
   // INIT DESCRIPTOR
   VkSampler texsampler;
   VkSamplerCreateInfo sampler_ci = {
-      .sType        = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO,
-      .magFilter    = VK_FILTER_LINEAR,
-      .minFilter    = VK_FILTER_LINEAR,
-      .addressModeU = VK_SAMPLER_ADDRESS_MODE_REPEAT,
-      .addressModeV = VK_SAMPLER_ADDRESS_MODE_REPEAT,
-      .mipmapMode   = VK_SAMPLER_MIPMAP_MODE_LINEAR,
+      .sType            = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO,
+      .magFilter        = VK_FILTER_LINEAR,
+      .minFilter        = VK_FILTER_LINEAR,
+
+      .addressModeU     = VK_SAMPLER_ADDRESS_MODE_REPEAT,
+      .addressModeV     = VK_SAMPLER_ADDRESS_MODE_REPEAT,
+
+      .minLod           = 0.0f,
+      .maxLod           = 11.f,
+      .mipLodBias       = 0.0f,
+
+      .anisotropyEnable = VK_TRUE,
+      .maxAnisotropy    = 16.f,
+
+      .mipmapMode       = VK_SAMPLER_MIPMAP_MODE_LINEAR,
   };
   app_vkchk(vkCreateSampler(g_vkdev, &sampler_ci, NULL, &texsampler), "vkCreateSampler");
 
@@ -1099,7 +1184,7 @@ bool app_vkbegin_render() {
   vkCmdBeginRendering(cb, &ri);
 
   // vkCmdDraw(cb, 3, 1, 0, 0);
-  vkCmdDraw(cb, 6, 2, 0, 0);
+  vkCmdDraw(cb, 6, g_game_object_count, 0, 0);
 
   // End Rendering
   vkCmdEndRendering(cb);

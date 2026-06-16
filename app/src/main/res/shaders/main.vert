@@ -65,20 +65,20 @@ void main() {
       obj_scaled.x * obj_rotcos - obj_scaled.y * obj_rotsin,
       obj_scaled.x * obj_rotsin + obj_scaled.y * obj_rotcos);
 
-  vec2 obj_world = obj_rotated + a_data.translate;
+  vec2 obj_world = obj_rotated + a_data.coord + a_data.translate;
 
-  vec2 obj_view = obj_world - u_cam.pos;
+  vec2 obj_view = (obj_world - u_cam.pos) * u_cam.zoom;
 
-  const vec2 half_reso = u_cam.reso / 2.0;
+  // const vec2 half_reso = vec2(0, 0); // u_cam.reso / 2.0;
 
-  // Anchored top left
-  const vec2 anchor_view = (obj_view - half_reso) * u_cam.zoom;
+  // Anchored top left (unused)
+  // const vec2 anchor_view = (obj_view - half_reso) * u_cam.zoom;
 
   const vec2 aspect = 2.0 / u_cam.reso;
 
   vec2 obj_clip;
-  obj_clip.x = anchor_view.x * aspect.x;
-  obj_clip.y = anchor_view.y * aspect.y;
+  obj_clip.x = obj_view.x * aspect.x;
+  obj_clip.y = obj_view.y * aspect.y;
 
   gl_Position = vec4(obj_clip, 0.f, 1.f);
 

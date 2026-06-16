@@ -24,6 +24,10 @@
 
 #include "app_gui.h"
 
+#include "main/res/data/anim_data.h"
+#include "main/res/data/demo_scenario_data.h"
+#include "main/res/data/unit_data.h"
+
 /*
  * 
  * app_vkinit_device
@@ -500,7 +504,7 @@ bool app_vkinit_pipeline() {
       .rasterizerDiscardEnable = VK_FALSE,
       .polygonMode             = VK_POLYGON_MODE_FILL,
       .lineWidth               = 1.f,
-      .cullMode                = VK_CULL_MODE_BACK_BIT,
+      .cullMode                = VK_CULL_MODE_NONE,  // VK_CULL_MODE_BACK_BIT,
       .frontFace               = VK_FRONT_FACE_CLOCKWISE,
       .depthBiasEnable         = VK_FALSE,
   };
@@ -568,7 +572,7 @@ bool app_vkinit_pipeline() {
   return true;
 }
 
-bool app_vkinit_render_data() {
+bool app_vkinit_static_render_data() {
   // INIT TILES DATA (SSBOs)
 
   // DESCRIPTOR DATA
@@ -634,7 +638,6 @@ bool app_vkinit_render_data() {
     vkUpdateDescriptorSets(g_vkdev, 1, &wdset, 0, NULL);
   }
 
-  size_t offset                                   = sizeof(g_vkmain_game_data);
   app_game_render_data_t* game_data_mapped_data[] = {
       (app_game_render_data_t*)g_vkmain_game_data[0].pmapped_data,
       (app_game_render_data_t*)g_vkmain_game_data[1].pmapped_data,
@@ -662,8 +665,8 @@ bool app_vkinit_render_data() {
           .colorb  = 1.f,
           .colora  = 1.f,
 
-          .scalex  = 1920.f,
-          .scaley  = 1080.f,
+          .scalex  = APP_GAME_GRID_DIMENSION_X,
+          .scaley  = APP_GAME_GRID_DIMENSION_Y,
 
           .rot     = 0.f,
 
@@ -681,7 +684,7 @@ bool app_vkinit_render_data() {
 
   app_game_render_data_t tiles_data[GAME_COL * GAME_ROW];
 
-  // EXPECTED HEXAGON GRID
+  // HEXAGON GRID
   for (size_t col = 0; col < GAME_COL; ++col) {
     for (size_t row = 0; row < GAME_ROW; ++row) {
 
@@ -693,8 +696,8 @@ bool app_vkinit_render_data() {
 
       size_t idx              = (col * GAME_ROW) + row;
 
-      tiles_data[idx].coordx  = col;
-      tiles_data[idx].coordy  = row;
+      tiles_data[idx].coordx  = (x - ((APP_GAME_GRID_DIMENSION_X / 2.f) - APP_GAME_TILE_RADIUS));
+      tiles_data[idx].coordy  = (y - ((APP_GAME_GRID_DIMENSION_Y / 2.f) - APP_GAME_TILE_INRADIUS));
       tiles_data[idx].colorr  = .15f;
       tiles_data[idx].colorg  = .15f;
       tiles_data[idx].colorb  = .15f;
@@ -702,74 +705,106 @@ bool app_vkinit_render_data() {
       tiles_data[idx].scalex  = APP_GAME_TILE_SCALE_X;
       tiles_data[idx].scaley  = APP_GAME_TILE_SCALE_Y;
       tiles_data[idx].rot     = 0.f;
-      tiles_data[idx].transx  = x - ((APP_GAME_GRID_DIMENSION_X / 2.f) - APP_GAME_TILE_RADIUS);
-      tiles_data[idx].transy  = y - ((APP_GAME_GRID_DIMENSION_Y / 2.f) - APP_GAME_TILE_INRADIUS);
+      tiles_data[idx].transx  = 0;
+      tiles_data[idx].transy  = 0;
       tiles_data[idx].texslot = 1;
       tiles_data[idx].texid   = 1;
 
-      log_debug("=============================");
-      log_debug("[app] tiles_data[%zu]: ", idx);
-      log_debug("[app] coordx: %zu coordy: %zu ", col, row);
-      log_debug("[app] transx: %f transy: %f ", tiles_data[idx].transx, tiles_data[idx].transy);
+      // log_debug("=============================");
+      // log_debug("[app] tiles_data[%zu]: ", idx);
+      // log_debug("[app] coordx: %zu coordy: %zu ", col, row);
+      // log_debug("[app] transx: %f transy: %f ", tiles_data[idx].transx, tiles_data[idx].transy);
     }
   }
 
-  app_game_render_data_t units_data[] = {
-      // UNITS DEBUG
-      (app_game_render_data_t){
-          .coordx  = 0.f,
-          .coordy  = 0.f,
-
-          .colorr  = 1.f,
-          .colorg  = 1.0f,
-          .colorb  = 1.f,
-          .colora  = 1.f,
-
-          .scalex  = 80.f,
-          .scaley  = 80.f,
-
-          .rot     = 0.f,
-
-          .transx  = 0.f,
-          .transy  = 0.f,
-
-          .texslot = 1,
-          .texid   = 2,
-      },
-
-      (app_game_render_data_t){
-          .coordx  = 0.f,
-          .coordy  = 0.f,
-
-          .colorr  = 1.f,
-          .colorg  = 1.0f,
-          .colorb  = 1.f,
-          .colora  = 1.f,
-
-          .scalex  = 80.f,
-          .scaley  = 120.f,
-
-          .rot     = 0.f,
-
-          .transx  = 500.f,
-          .transy  = 100.f,
-
-          .texslot = 1,
-          .texid   = 3,
-      },
-  };
+  app_game_render_data_t units_data[] = {};
 
   // DOUBLE BUFFER
   for (size_t i = 0; i < APP_VK_MAX_FIFO; ++i) {
     memcpy(game_data_mapped_data[i], static_data, sizeof(static_data));
-    memcpy(game_data_mapped_data[i] + SDL_arraysize(static_data), tiles_data, sizeof(tiles_data));
-    memcpy(game_data_mapped_data[i] + SDL_arraysize(static_data) + SDL_arraysize(tiles_data),
-           units_data, sizeof(units_data));
+    memcpy(game_data_mapped_data[i] + APP_GAME_RENDER_TILES_DATA_OFFSET, tiles_data,
+           sizeof(tiles_data));
+    memcpy(game_data_mapped_data[i] + APP_GAME_RENDER_UNIT_DATA_OFFSET, units_data,
+           sizeof(units_data));
   }
 
+  g_game_static_enitites_count += SDL_arraysize(static_data);
+  g_game_tiles_entities_count += SDL_arraysize(tiles_data);
+  g_game_units_entities_count += SDL_arraysize(units_data);
+
   g_game_object_count +=
-      SDL_arraysize(static_data) + SDL_arraysize(tiles_data) + SDL_arraysize(units_data);
+      g_game_static_enitites_count + g_game_tiles_entities_count + g_game_units_entities_count;
+
   log_debug("[app] draw %d instances", g_game_object_count);
+
+  return true;
+}
+
+/*
+ *
+ * app_vkinit_frame_render_data
+ *
+ * */
+bool app_vkinit_frame_render_data() {
+  if ((g_game_units_entities_flag & APP_GAME_ENTITY_DIRTY_FLAG) == 0) {
+    return true;
+  }
+
+  log_debug("[app] %s: init_frame_data", __FUNCTION__);
+
+  const size_t GAME_COL = APP_GAME_GRID_MAX_COL;
+  const size_t GAME_ROW = APP_GAME_GRID_MAX_ROW;
+
+  for (size_t i = 0; i < APP_VK_MAX_FIFO; ++i) {
+    app_game_render_data_t* game_data_mapped_data =
+        (app_game_render_data_t*)g_vkmain_game_data[i].pmapped_data;
+
+    if (game_data_mapped_data == NULL) {
+      log_error("[app] g_vkmain_game_data[%d].pmapped_data", 0);
+      return false;
+    }
+
+    for (size_t entt_idx = 0; entt_idx < g_game_units_entities_count; ++entt_idx) {
+      size_t tile_idx =
+          (g_game_coord_comp[entt_idx].col * GAME_ROW) + g_game_coord_comp[entt_idx].row;
+
+      log_debug(
+          "[app] %s: col=%d row=%d tile_idx=%d scalex=%.2f scaley=%.2f transx=%.2f transy=%.2f",
+          __FUNCTION__, g_game_coord_comp[entt_idx].col, g_game_coord_comp[entt_idx].row, tile_idx,
+          g_game_transform_comp[entt_idx].scalex, g_game_transform_comp[entt_idx].scaley, tile_idx,
+          g_game_transform_comp[entt_idx].transx, g_game_transform_comp[entt_idx].transy, tile_idx);
+
+      app_game_render_data_t* p_unit =
+          &game_data_mapped_data[APP_GAME_RENDER_UNIT_DATA_OFFSET + entt_idx];
+      app_game_render_data_t* p_tile =
+          &game_data_mapped_data[APP_GAME_RENDER_TILES_DATA_OFFSET + tile_idx];
+
+      p_unit->coordx  = p_tile->coordx;
+      p_unit->coordy  = p_tile->coordy;
+
+      p_unit->colorr  = 1.f;
+      p_unit->colorg  = 1.f;
+      p_unit->colorb  = 1.f;
+      p_unit->colora  = 1.f;
+
+      p_unit->rot     = g_game_transform_comp[entt_idx].rot;
+
+      p_unit->scalex  = g_game_transform_comp[entt_idx].scalex * APP_MAIN_WINDOW_SCALE;
+      p_unit->scaley  = g_game_transform_comp[entt_idx].scaley * APP_MAIN_WINDOW_SCALE;
+
+      p_unit->transx  = g_game_transform_comp[entt_idx].transx * APP_MAIN_WINDOW_SCALE;
+      p_unit->transy  = g_game_transform_comp[entt_idx].transy * APP_MAIN_WINDOW_SCALE;
+
+      p_unit->texslot = g_game_render_comp[entt_idx].texslot;
+      p_unit->texid   = g_game_render_comp[entt_idx].texid;
+
+      log_debug("[app] %s: texid=%d", __FUNCTION__, g_game_render_comp[entt_idx].texid);
+    }
+  }
+
+  g_game_object_count += g_game_units_entities_count;
+
+  g_game_units_entities_flag &= ~APP_GAME_ENTITY_DIRTY_FLAG;
 
   return true;
 }
@@ -1167,8 +1202,9 @@ bool app_vkbegin_render() {
   vkCmdBindDescriptorSets(cb, VK_PIPELINE_BIND_POINT_GRAPHICS, g_vkmainpllayout, 0, 1,
                           &g_vkmain_game_data[g_vkframe_idx].dset, 0, NULL);
 
+  app_game_camera_data_t current_frame_cam = g_game_cam;
   vkCmdPushConstants(cb, g_vkmainpllayout, VK_SHADER_STAGE_VERTEX_BIT, 0, APP_GAME_CAMERA_DATA_SZ,
-                     &g_game_cam);
+                     &current_frame_cam);
 
   // BEGIN RENDER
   VkRenderingAttachmentInfo col_atchi = {
@@ -1177,10 +1213,11 @@ bool app_vkbegin_render() {
       .imageLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
       .loadOp      = VK_ATTACHMENT_LOAD_OP_CLEAR,
       .storeOp     = VK_ATTACHMENT_STORE_OP_STORE,
-      .clearValue  = {
-          .color = {APP_UTIL_COLOR_SRGBA(0.12156862745098039215f, 0.12156862745098039215f,
-                                         0.12156862745098039215f, 1.0f)},
-      }};
+      .clearValue =
+          {
+              .color = {g_appctx.clrscr[0], g_appctx.clrscr[1], g_appctx.clrscr[2], 1.f},
+          },
+  };
 
   VkRenderingInfo ri = {
       .sType                = VK_STRUCTURE_TYPE_RENDERING_INFO,
@@ -1198,7 +1235,7 @@ bool app_vkbegin_render() {
   // vkCmdDraw(cb, 3, 1, 0, 0);
   vkCmdDraw(cb, 6, g_game_object_count, 0, 0);
 
-  app_guidraw_demo(&g_appctx);
+  app_guimain(&g_appctx);
 
   // END RENDER
   app_vkgui_end(&cb);
@@ -1297,29 +1334,19 @@ bool app_vkdestroy() {
 }
 
 /*
- *
- *
- * APP_GAME
  * 
  *
+ * app_gameev_camera_control
+ *
  * */
-bool app_gameinit() {
-
-  return true;
-}
-
 bool app_gameev_camera_control(const SDL_Event* p_ev) {
   static bool isdragging  = false;
   static float lastmousex = 0;
   static float lastmousey = 0;
 
-  if (app_guiwant_capture_mouse()) {
-    return true;
-  }
-
-  const float zoom = g_game_cam.zoom;
-  const float camx = g_game_cam.posx;
-  const float camy = g_game_cam.posy;
+  const float zoom        = g_game_cam.zoom;
+  const float camx        = g_game_cam.posx;
+  const float camy        = g_game_cam.posy;
 
   if (p_ev->type == SDL_EVENT_MOUSE_BUTTON_DOWN) {
     isdragging = true;
@@ -1430,6 +1457,161 @@ bool app_gameev_camera_control(const SDL_Event* p_ev) {
       is_pinching = false;
     }
   });
+
+  return true;
+}
+
+/*
+ *
+ *
+ * ecs_system_game_unit_selection_system
+ *
+ * handling tile grid touch -> on unit event
+ *
+ * grid is 32 columns (r) by 16 row (q) flat top odd-q hex grid
+ * on top of 1920 by 1080 world coordinate
+ *
+ *
+ * */
+bool app_gameev_unit_selection(const SDL_Event* p_ev) {
+  if (p_ev->type != SDL_EVENT_MOUSE_BUTTON_DOWN)
+    return true;
+
+  static float finalx     = 0;
+  static float finaly     = 0;
+
+  const float zoom_factor = g_game_cam.zoom;  // Use it so mousex and mousey still align
+  const float scrcenterx  = (g_game_cam.resow / 2.f);
+  const float scrcentery  = (g_game_cam.resoh / 2.f);
+
+  const float offsetx     = p_ev->button.x - scrcenterx;
+  const float offsety     = p_ev->button.y - scrcentery;
+
+  log_debug("[app] offsetx: %.2f", offsetx);
+  log_debug("[app] offsety: %.2f", offsety);
+
+  const float worldx =
+      ((offsetx / zoom_factor) + scrcenterx + g_game_cam.posx) - APP_GAME_TILE_RADIUS;
+  const float worldy =
+      ((offsety / zoom_factor) + scrcentery + (g_game_cam.posy)) + APP_GAME_TILE_INRADIUS;
+
+  log_debug("[app] worldx: %.2f", worldx);
+  log_debug("[app] worldy: %.2f", worldy);
+
+  // PIXEL TO HEX https://www.redblobgames.com/grids/hexagons/#rounding
+  float x = worldx / APP_GAME_TILE_RADIUS;
+  float y = worldy / APP_GAME_TILE_RADIUS;
+
+  float q = (2.f / 3.f * x);
+  float r = (-1.f / 3.f * x + SDL_sqrt(3.f) / 3.f * y);
+
+  // AXIAL ROUND https://observablehq.com/@jrus/hexround
+  const float xgrid = SDL_round(q);
+  const float ygrid = SDL_round(r);
+  q -= xgrid;
+  r -= ygrid;
+
+  const float dx = SDL_round(q + .5f * r) * (q * q >= r * r);
+  const float dy = SDL_round(r + .5f * q) * (q * q < r * r);
+
+  finalx         = xgrid + dx;
+  finaly         = ygrid + dy - 1;
+
+  // log_debug("[app] finalx: %.2f", finalx);
+  // log_debug("[app] finaly: %.2f", finaly);
+
+  SDL_Event ev;
+  SDL_zero(ev);
+  ev.type       = SDL_EVENT_USER;
+  ev.user.code  = 1001;
+  ev.user.data1 = (void*)(intptr_t)finalx;
+  ev.user.data2 = (void*)(intptr_t)finaly;
+
+  SDL_PushEvent(&ev);
+
+  return true;
+}
+
+/*
+ *
+ *
+ * ecs_system_game_unit_selection_system
+ *
+ * handling tile grid touch -> on unit event
+ *
+ * grid is 32 columns (r) by 16 row (q) flat top odd-q hex grid
+ * on top of 1920 by 1080 world coordinate
+ *
+ *
+ * */
+bool app_gameev_unit_action(const SDL_Event* p_ev) {
+
+  if (p_ev->type == SDL_EVENT_USER && p_ev->user.code == 1001) {
+    int q = (int)(intptr_t)p_ev->user.data1;
+    int r = (int)(intptr_t)p_ev->user.data2;
+
+    log_debug("[app] %s: Selected (axial) q %d r %d", __FUNCTION__, q, r);
+
+    // CONVERT AXIAL TO OFFSET https://www.redblobgames.com/grids/hexagons/#conversions
+    const int parity = q & 1;
+    const int col    = q;
+    const int row    = r + (q - parity) / 2;
+
+    if ((col >= 0 && col < APP_GAME_GRID_MAX_COL) && (row >= 0 && row < APP_GAME_GRID_MAX_ROW)) {
+      log_debug("[app] %s: Selected (offset) col %d row %d", __FUNCTION__, col, row);
+
+      for (size_t i = 0; i < APP_VK_MAX_FIFO; ++i) {
+        app_game_render_data_t* game_data_mapped_data =
+            (app_game_render_data_t*)g_vkmain_game_data[i].pmapped_data;  // array
+
+        if (game_data_mapped_data == NULL) {
+          log_error("[app] g_vkmain_game_data[%d].pmapped_data", i);
+          return false;
+        }
+
+        app_game_render_data_t* selected =
+            &game_data_mapped_data[APP_GAME_RENDER_TILES_DATA_OFFSET +
+                                   (col * APP_GAME_GRID_MAX_ROW) + row];
+        // game_data_mapped_data + ((APP_GAME_RENDER_TILES_DATA_OFFSET + col + row));
+
+        selected->colorr = (selected->colorr == 1.f) ? .15f : 1.f;
+        selected->colorg = (selected->colorg == 0.f) ? .15f : 0.f;
+        selected->colorb = (selected->colorb == 0.f) ? .15f : 0.f;
+      }
+    }
+  }
+
+  return true;
+}
+
+/*
+ *
+ *
+ * APP_GAME
+ * 
+ *
+ * */
+bool app_gameinit() {
+  g_game_units_entities_count = SDL_arraysize(g_app_res_demo_scenario_data.initial_units);
+
+  for (size_t i = 0; i < g_game_units_entities_count; ++i) {
+    g_game_ents[i].bitset           = APP_GAME_COORD_COMPONENT_BIT | APP_GAME_RENDER_COMPONENT_BIT |
+                                      APP_GAME_TRANSFORM_COMPONENT_BIT;
+    g_game_coord_comp[i].col        = g_app_res_demo_scenario_data.initial_units[i].col;
+    g_game_coord_comp[i].row        = g_app_res_demo_scenario_data.initial_units[i].row;
+
+    const uint64_t UNIT_ID          = g_app_res_demo_scenario_data.initial_units[i].id;
+
+    g_game_render_comp[i].texslot   = APP_VK_MAIN_GAME_TEXTURE_ARRAY_1024X1024_SLOT;
+    g_game_render_comp[i].texid     = APP_RES_UNIT_DATA[UNIT_ID].texid;
+    g_game_transform_comp[i].rot    = APP_RES_UNIT_DATA[UNIT_ID].rot;
+    g_game_transform_comp[i].scalex = APP_RES_UNIT_DATA[UNIT_ID].scalex;
+    g_game_transform_comp[i].scaley = APP_RES_UNIT_DATA[UNIT_ID].scaley;
+    g_game_transform_comp[i].transx = APP_RES_UNIT_DATA[UNIT_ID].transx;
+    g_game_transform_comp[i].transy = APP_RES_UNIT_DATA[UNIT_ID].transy;
+  }
+
+  g_game_units_entities_flag |= APP_GAME_ENTITY_DIRTY_FLAG;
 
   return true;
 }

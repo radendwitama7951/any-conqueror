@@ -8,7 +8,11 @@ extern "C" {
 #include <stdbool.h>
 #include "app_ctx.h"
 
-bool app_guidraw_demo(app_ctx_t* p_ctx);
+/*
+ * gui_entry
+ * */
+bool app_guisetup(app_ctx_t* p_ctx);
+bool app_guimain(app_ctx_t* p_ctx);
 
 /*
  * IMGUI WRAPPER

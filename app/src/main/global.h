@@ -65,6 +65,11 @@ typedef struct {
 
 #define APP_GAME_RENDER_DATA_SZ sizeof(app_game_render_data_t)
 
+#define APP_GAME_RENDER_BACKGROUND_DATA_OFFSET (0)
+#define APP_GAME_RENDER_TILES_DATA_OFFSET (APP_GAME_RENDER_BACKGROUND_DATA_OFFSET + 1)
+#define APP_GAME_RENDER_UNIT_DATA_OFFSET \
+  (APP_GAME_RENDER_TILES_DATA_OFFSET + APP_GAME_GRID_TILE_COUNT)
+
 /*
  * CAMERA
  * !world space == view space
@@ -87,11 +92,11 @@ typedef struct {
 #define APP_GAME_CAMERA_DATA_SZ sizeof(app_game_camera_data_t)
 
 static app_game_camera_data_t g_game_cam = {
-    .posx  = -1920 / 2.f,
-    .posy  = -1080 / 2.f,
-    .zoom  = 1.,
-    .resow = 1920,
-    .resoh = 1080,
+    .posx  = 0,  // -APP_MAIN_WINDOW_WIDTH / 2.f,  // MOVE CAMERA ANCHOR TO TOP LEFT
+    .posy  = 0,  // -APP_MAIN_WINDOW_HEIGHT / 2.f,
+    .zoom  = 1.f,
+    .resow = APP_MAIN_WINDOW_WIDTH,
+    .resoh = APP_MAIN_WINDOW_HEIGHT,
 };
 
 #define APP_GAME_TILE_RADIUS_SCALE (1.0 / 2.f)
@@ -202,6 +207,10 @@ typedef struct {
 
 #define APP_VK_MAIN_GAME_TEXTURE_ARRAY_COUNT 2
 #define APP_VK_MAIN_GAME_TEXTURE_ARRAY_MIPLEVELS 2
+
+#define APP_VK_MAIN_GAME_TEXTURE_ARRAY_1920X1080_SLOT 0
+#define APP_VK_MAIN_GAME_TEXTURE_ARRAY_1024X1024_SLOT 1
+
 static app_vkmain_game_texture_t g_vkmain_game_texs[APP_VK_MAIN_GAME_TEXTURE_ARRAY_COUNT];
 
 /*

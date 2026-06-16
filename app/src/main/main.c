@@ -52,17 +52,17 @@ SDL_AppResult SDL_AppInit(void** pp_as, int argc, char* argv[]) {
   app_chk(app_vkinit_shader(), "app_vkinit_shader");
   app_chk(app_vkinit_pipeline(), "app_vkinit_pipeline");
 
-  app_chk(app_vkinit_render_data(), "app_vkinit_render_data");
+  app_chk(app_vkinit_static_render_data(), "app_vkinit_render_data");
   app_chk(app_vkinit_mesh_assets(), "app_vkinit_mesh_assets");
   app_chk(app_vkinit_tex_assets(), "app_vkinit_tex_assets");
   app_chk(app_vkgui_init(), "app_vkinitgui");
-
 #endif  //APP_USE_VK
 
   g_appctx = (app_ctx_t){
       .clrscr = {0.12156862745098039215f, 0.12156862745098039215f, 0.12156862745098039215f},
   };
 
+  app_chk(app_guisetup(&g_appctx), "app_guisetup");
   app_chk(app_gameinit(), "app_gameinit");
 
   return SDL_APP_CONTINUE;
@@ -83,7 +83,11 @@ SDL_AppResult SDL_AppEvent(void* p_as, SDL_Event* p_ev) {
       break;
   }
 
-  app_gameev_camera_control(p_ev);
+  if (!app_guiwant_capture_mouse()) {
+    app_gameev_camera_control(p_ev);
+    app_gameev_unit_selection(p_ev);
+    app_gameev_unit_action(p_ev);
+  }
 
 #ifdef APP_USE_VK
   if (!app_vkhandle_event(p_ev)) {
@@ -98,6 +102,7 @@ SDL_AppResult SDL_AppEvent(void* p_as, SDL_Event* p_ev) {
 SDL_AppResult SDL_AppIterate(void* p_as) {
 
 #ifdef APP_USE_VK
+  app_vkinit_frame_render_data();
   app_vkbegin_render();
 #endif  //APP_USE_VK
 

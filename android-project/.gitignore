@@ -1,0 +1,75 @@
+# ==========================================
+# Language & Build Tools (C/C++, CMake, Make)
+# ==========================================
+# Compiled object files
+*.o
+*.obj
+*.d
+
+# Precompiled Headers
+*.gch
+*.pch
+
+# Libraries and Executables
+*.lib
+*.a
+*.la
+*.lo
+*.dll
+*.so
+*.so.*
+*.dylib
+*.exe
+*.out
+*.app
+
+# CMake build directories and artifacts
+/.cmake/
+/cmake-build-*/
+/build/
+/CMakeUserPresets.json
+
+# ==========================================
+# Android / Gradle / NDK
+# ==========================================
+# Android Studio / IntelliJ files
+.idea/
+*.iml
+.gradle/
+local.properties
+Captures/
+.externalNativeBuild/
+.cxx/
+
+# Output APKs/AABs and build artifacts
+**/build/
+*.apk
+*.aab
+
+# NDK specific
+obj/
+libs/
+
+# ==========================================
+# SDL3 Specific
+# ==========================================
+# If you clone SDL3 as a submodule/dependency inside your project, 
+# you usually want to keep it, but ignore its build artifacts.
+# If you vendor SDL3 source directly and want to ignore it entirely:
+# /third_party/SDL/
+
+# ==========================================
+# OS & Editor Specific
+# ==========================================
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# VS Code
+.vscode/

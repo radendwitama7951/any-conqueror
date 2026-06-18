@@ -1,7 +1,6 @@
 #define IMGUI_DEFINE_MATH_OPERATORS
 #include <imgui.h>
 
-#include "main/app_ctx.h"
 #include "main/app_gui.h"
 #include "utils.h"
 
@@ -10,7 +9,7 @@ static ImFont* g_guifontlg     = nullptr;
 
 static bool g_guishow_demo     = false;
 
-bool app_gui_demo(app_ctx_t* p_ctx) {
+bool app_gui_demo(app_guistate_t* p_ctx) {
 
   static bool show_demo_window    = true;
   static bool show_another_window = false;
@@ -66,7 +65,7 @@ bool app_gui_demo(app_ctx_t* p_ctx) {
   return true;
 }
 
-void app_guibottom_menu(app_ctx_t* p_ctx) {
+void app_guibottom_menu(app_guistate_t* p_ctx) {
   ImGuiViewport* vp = ImGui::GetMainViewport();
 
   // 1. Define your global scale factor
@@ -150,7 +149,7 @@ void app_guibottom_menu(app_ctx_t* p_ctx) {
  * GUI ENTRY POINT
  * */
 
-bool app_guisetup(app_ctx_t* p_ctx) {
+bool app_guisetup(app_guistate_t* p_ctx) {
   ImGuiIO& io = ImGui::GetIO();
   ImFontConfig cfg;
 
@@ -167,7 +166,7 @@ bool app_guisetup(app_ctx_t* p_ctx) {
 
   return true;
 }
-bool app_guimain(app_ctx_t* p_ctx) {
+bool app_guimain(app_guistate_t* p_ctx) {
 
   app_guibottom_menu(p_ctx);
 

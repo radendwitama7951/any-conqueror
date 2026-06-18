@@ -6,14 +6,14 @@
 //
 #include <vk_mem_alloc.h>
 
-#include "app_ctx.h"
+#include "app_gui.h"
 
-#define APP_MAIN_WINDOW_SCALE 1.f
+#define APP_MAIN_WINDOW_SCALE .8f
 #ifdef __ANDROID__
 #define APP_MAIN_WINDOW_INIT_WIDTH (2340 * APP_MAIN_WINDOW_SCALE)
 #define APP_MAIN_WINDOW_INIT_HEIGHT (1080 * APP_MAIN_WINDOW_SCALE)
 #else
-#define APP_MAIN_WINDOW_INIT_WIDTH (1920 * APP_MAIN_WINDOW_SCALE)
+#define APP_MAIN_WINDOW_INIT_WIDTH (2340 * APP_MAIN_WINDOW_SCALE)
 #define APP_MAIN_WINDOW_INIT_HEIGHT (1080 * APP_MAIN_WINDOW_SCALE)
 #endif  //
 
@@ -21,7 +21,7 @@ SDL_Window* g_pmainwdow;
 int g_mainwdoww = (APP_MAIN_WINDOW_INIT_WIDTH);
 int g_mainwdowh = (APP_MAIN_WINDOW_INIT_HEIGHT);
 
-app_ctx_t g_appctx;
+app_guistate_t g_appctx;
 
 bool g_app_renderable = false;
 

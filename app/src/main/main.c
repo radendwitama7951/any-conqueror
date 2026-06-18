@@ -67,7 +67,7 @@ SDL_AppResult SDL_AppInit(void** pp_as, int argc, char* argv[]) {
   app_chk(app_vkgui_init(), "app_vkinitgui");
 #endif  //APP_USE_VK
 
-  g_appctx = (app_ctx_t){
+  g_appctx = (app_guistate_t){
       .clrscr = {APP_UTIL_COLOR_SRGB(0.12156862745098039215f, 0.12156862745098039215f,
                                      0.12156862745098039215f)},
   };

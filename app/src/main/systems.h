@@ -1236,10 +1236,10 @@ bool app_vkupdate_swapchain() {
 
   g_game_cam.resow = wdoww;
   g_game_cam.resoh = wdowh;
-  g_game_cam.zoom  = 2;
+  // g_game_cam.zoom  = 2;
 
-  g_mainwdoww      = wdoww;
-  g_mainwdowh      = wdowh;
+  g_mainwdoww = wdoww;
+  g_mainwdowh = wdowh;
 
   return true;
 }

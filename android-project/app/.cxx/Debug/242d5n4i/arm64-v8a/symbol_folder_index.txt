@@ -1,1 +1,0 @@
-/home/dwitama/Documents/devel/cpp/any-conqueror/android-project/app/build/intermediates/cxx/Debug/242d5n4i/obj/arm64-v8a

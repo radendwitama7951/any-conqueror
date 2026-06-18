@@ -1,9 +1,0 @@
-{
-  "revision": 0,
-  "rules": [
-    {
-      "primary-output": "app/CMakeFiles/any-conqueror.dir/src/main/vma_impl.cpp.o"
-    }
-  ],
-  "version": 1
-}

@@ -1,0 +1,310 @@
+<div class="slide " id="slide-6">
+  <style>
+    /* Main layout utilizing a balanced dual-column distribution */
+    .canvas-layout {
+      display: grid;
+      grid-template-columns: 1.1fr 1.3fr;
+      gap: 35px;
+      width: 100%;
+      max-width: 1400px;
+      height: 100%;
+      align-items: center;
+      z-index: 10;
+      padding: 10px 0;
+    }
+
+    .canvas-info-frame {
+      text-align: left;
+      display: flex;
+      flex-direction: column;
+      height: 520px;
+      /* Locked height to prevent jumps during sub-tab switching */
+    }
+
+    .canvas-title {
+      font-size: 2.8rem;
+      text-transform: uppercase;
+      color: var(--accent-color);
+      margin-bottom: 5px;
+      letter-spacing: 2px;
+      text-shadow: 1px 1px 0px rgba(0, 0, 0, 0.1);
+    }
+
+    .canvas-subtitle {
+      font-size: 1.05rem;
+      color: #5c4d3c;
+      font-style: italic;
+      margin-bottom: 25px;
+    }
+
+    /* Sub-Tab Navigation System for Text Content */
+    .canvas-tabs-nav {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 20px;
+      border-bottom: 1px solid var(--border-color);
+      padding-bottom: 10px;
+    }
+
+    .canvas-tab-btn {
+      background: none;
+      border: 1px solid transparent;
+      font-family: 'Georgia', serif;
+      font-size: 0.9rem;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      padding: 6px 12px;
+      cursor: pointer;
+      color: #7a664d;
+      transition: all 0.2s ease;
+    }
+
+    .canvas-tab-btn.active {
+      border-color: var(--border-color);
+      background-color: rgba(188, 163, 122, 0.15);
+      color: var(--accent-color);
+      font-weight: bold;
+    }
+
+    /* Sub-Tab Content Windows */
+    .canvas-tab-pane {
+      display: none;
+      font-size: 0.95rem;
+      line-height: 1.6;
+      color: #403525;
+      animation: fadeInPane 0.3s ease forwards;
+    }
+
+    .canvas-tab-pane.active {
+      display: block;
+    }
+
+    @keyframes fadeInPane {
+      from {
+        opacity: 0;
+        transform: translateY(5px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .canvas-tab-pane ul {
+      margin-top: 10px;
+      padding-left: 20px;
+    }
+
+    .canvas-tab-pane li {
+      margin-bottom: 8px;
+    }
+
+    /* Ultra-wide Illustration Container (2340x1080 Aspect Ratio) */
+    .canvas-visual-frame {
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+      align-items: center;
+    }
+
+    .canvas-img-container {
+      width: 100%;
+      aspect-ratio: 2340 / 1080;
+      /* Forces precise 2340x1080 scaling bounds */
+      border: 1px solid var(--border-color);
+      background-color: rgba(188, 163, 122, 0.06);
+      position: relative;
+      box-shadow: 4px 4px 0px var(--shadow-color);
+      overflow: hidden;
+    }
+
+    .canvas-display-img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: none;
+    }
+
+    .canvas-display-img.active {
+      display: block;
+      animation: fadeInImg 0.4s ease forwards;
+    }
+
+    @keyframes fadeInImg {
+      from {
+        opacity: 0;
+        filter: blur(5px);
+      }
+
+      to {
+        opacity: 1;
+        filter: blur(0);
+      }
+    }
+
+    /* Dynamic Fallback Blueprint Overlay */
+    .canvas-blueprint-overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      background-image: radial-gradient(rgba(140, 45, 25, 0.08) 1px, transparent 0);
+      background-size: 20px 20px;
+      pointer-events: none;
+      padding: 20px;
+      text-align: center;
+    }
+
+    .blueprint-tag {
+      font-family: 'Courier New', monospace;
+      font-size: 0.8rem;
+      background-color: var(--accent-color);
+      color: var(--bg-color);
+      padding: 2px 8px;
+      margin-bottom: 10px;
+      text-transform: uppercase;
+    }
+
+    /* Image Control Toggles */
+    .img-toggle-group {
+      display: flex;
+      gap: 15px;
+    }
+
+    .toggle-img-btn {
+      background-color: rgba(235, 225, 200, 0.6);
+      border: 1px solid var(--border-color);
+      padding: 8px 16px;
+      font-family: 'Georgia', serif;
+      font-size: 0.85rem;
+      cursor: pointer;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      transition: all 0.2s ease;
+    }
+
+    .toggle-img-btn.active {
+      background-color: var(--text-color);
+      color: var(--bg-color);
+      border-color: var(--text-color);
+    }
+  </style>
+
+  <div class="canvas-layout">
+    <div class="canvas-info-frame">
+      <h2 class="canvas-title">UI/UX Canvas</h2>
+      <p class="canvas-subtitle">Desain Antarmuka Taktis Berbasis Sinkronisasi Menggunakan Pola Kerja IMGUI</p>
+
+      <div class="canvas-tabs-nav">
+        <button class="canvas-tab-btn active" onclick="switchUiTab(event, 'tab-imgui')">IMGUI Architecture</button>
+        <button class="canvas-tab-btn" onclick="switchUiTab(event, 'tab-art')">Mappa Mundi Style</button>
+        <button class="canvas-tab-btn" onclick="switchUiTab(event, 'tab-hud')">HUD Core Elements</button>
+      </div>
+
+      <div class="canvas-tab-pane active" id="tab-imgui">
+        <p>Karena dikembangkan dari nol menggunakan <b>SDL3 dan Vulkan 1.3</b>, antarmuka game ini membuang total pola
+          retain-mode konvensional, bermigrasi penuh ke <b>Immediate Mode UI (IMGUI)</b>:</p>
+        <ul>
+          <li><b>Nihil Kebocoran Memori:</b> Widget dievaluasi dan dirender secara sinkron pada siklus <i>Render State
+              frame buffer</i> tanpa menyimpan hierarki objek statis di RAM.</li>
+          <li><b>Efisiensi Modding Canvas:</b> Mempermudah pembentukan editor kustom dalam game; menyusun jendela
+            modifikasi baru hanya memerlukan beberapa baris fungsi prosedural C.</li>
+        </ul>
+      </div>
+
+      <div class="canvas-tab-pane" id="tab-art">
+        <p>Mengadopsi estetika visual kartografi abad pertengahan klasik (<b>Stylized Mappa Mundi with Grained
+            Shades</b>) untuk memperkuat imersi pertempuran makro:</p>
+        <ul>
+          <li><b>Skema Antarmuka Terpadu:</b> Warna penanda faksi berbaur dengan tekstur kertas navigasi bahari kuno,
+            menciptakan ilusi dokumen sejarah yang hidup di layar pemain.</li>
+        </ul>
+      </div>
+
+      <div class="canvas-tab-pane" id="tab-hud">
+        <p>Tata letak taktis mengadopsi rancangan klasik yang familier bagi veteran genre strategi papan (terinspirasi
+          dari World Conqueror 4 layout):</p>
+        <ul>
+          <li><b>Top Resource Bar:</b> Pemantauan real-time untuk variabel aset <i>Economic, Industry,</i> dan
+            <i>Research</i> serta akses instan ke <i>Paused State</i>.
+          </li>
+          <li><b>Contextual Components:</b> Panel <i>Tile Info</i> (medan perang) dan perluasan tombol <i>Unit Info</i>
+            hanya akan muncul via IMGUI ketika koordinat heksagon diklik aktif.</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="canvas-visual-frame">
+      <div class="canvas-img-container">
+        <img src="figures/gambar2.png" alt="HUD Screen Wireframe Blueprint" class="canvas-display-img active"
+          id="ui-img-1" />
+        <!-- <div class="canvas-blueprint-overlay" id="ui-overlay-1"> -->
+        <!--   <span class="blueprint-tag">Layout Wireframe</span> -->
+        <!--   <h4 style="color: var(--text-color); margin-bottom: 5px;">[ Wireframe HUD Taktis - WC4 Layout Standard ]</h4> -->
+        <!--   <p style="font-family: 'Courier New', monospace; font-size: 0.75rem; color: #8a7355;">Target Bounds: 2340 x -->
+        <!--     1080 px | Rendering System: IMGUI Quad Vertices</p> -->
+        <!-- </div> -->
+
+        <img src="figures/gambar3.png" alt="Mappa Mundi Aesthetic Preview" class="canvas-display-img" id="ui-img-2" />
+        <!-- <div class="canvas-blueprint-overlay" id="ui-overlay-2" style="display: none;"> -->
+        <!--   <span class="blueprint-tag" style="background-color: #5c4d3c;">Art Mockup</span> -->
+        <!--   <h4 style="color: var(--text-color); margin-bottom: 5px;">[ Estetika Visual - Mappa Mundi Grained Shades ] -->
+        <!--   </h4> -->
+        <!--   <p style="font-family: 'Courier New', monospace; font-size: 0.75rem; color: #8a7355;">Target Bounds: 2340 x -->
+        <!--     1080 px | Shader Pipe: Vulkan Fragment Shader Filter</p> -->
+        <!-- </div> -->
+      </div>
+
+      <div class="img-toggle-group">
+        <button class="toggle-img-btn active" id="btn-toggle-1" onclick="switchUiImage(1)">View Wireframe</button>
+        <button class="toggle-img-btn" id="btn-toggle-2" onclick="switchUiImage(2)">View Aesthetic Mockup</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Fungsi Manajemen Navigasi Berhalaman Penjelasan Teks
+    function switchUiTab(event, tabId) {
+      const tabPanes = document.querySelectorAll('.canvas-tab-pane');
+      const tabButtons = document.querySelectorAll('.canvas-tab-btn');
+
+      tabPanes.forEach(pane => pane.classList.remove('active'));
+      tabButtons.forEach(btn => btn.classList.remove('active'));
+
+      document.getElementById(tabId).classList.add('active');
+      event.currentTarget.classList.add('active');
+    }
+
+    // Fungsi Manajemen Pertukaran Ilustrasi Gambar Beresolusi Tinggi
+    function switchUiImage(imgIndex) {
+      const img1 = document.getElementById('ui-img-1');
+      const img2 = document.getElementById('ui-img-2');
+      const overlay1 = document.getElementById('ui-overlay-1');
+      const overlay2 = document.getElementById('ui-overlay-2');
+      const btn1 = document.getElementById('btn-toggle-1');
+      const btn2 = document.getElementById('btn-toggle-2');
+
+      if (imgIndex === 1) {
+        img1.classList.add('active');
+        img2.classList.remove('active');
+        overlay1.style.display = 'flex';
+        overlay2.style.display = 'none';
+        btn1.classList.add('active');
+        btn2.classList.remove('active');
+      } else {
+        img1.classList.remove('active');
+        img2.classList.add('active');
+        overlay1.style.display = 'none';
+        overlay2.style.display = 'flex';
+        btn1.classList.remove('active');
+        btn2.classList.add('active');
+      }
+    }
+  </script>
+</div>

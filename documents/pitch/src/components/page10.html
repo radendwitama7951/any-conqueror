@@ -1,0 +1,352 @@
+<div class="slide " id="slide-10">
+  <style>
+    /* Gaya Tata Letak Matriks SWOT 2x2 */
+    .swot-layout {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      width: 100%;
+      max-width: 1350px;
+      height: 100%;
+      z-index: 10;
+      padding: 10px 0;
+    }
+
+    .swot-header-frame {
+      text-align: center;
+      margin-bottom: 25px;
+    }
+
+    .swot-main-title {
+      font-size: 2.8rem;
+      text-transform: uppercase;
+      color: var(--accent-color);
+      letter-spacing: 2px;
+      margin-bottom: 5px;
+      text-shadow: 1px 1px 0px rgba(0, 0, 0, 0.1);
+    }
+
+    .swot-subtitle {
+      font-size: 1.05rem;
+      color: #5c4d3c;
+      font-style: italic;
+    }
+
+    .swot-matrix {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      grid-template-rows: 1fr 1fr;
+      gap: 20px;
+      width: 100%;
+    }
+
+    /* Kuadran Interaktif (Zoomable on Click) */
+    .swot-quadrant {
+      background-color: rgba(235, 225, 200, 0.3);
+      border: 1px solid var(--border-color);
+      padding: 22px 25px;
+      text-align: left;
+      position: relative;
+      box-shadow: 2px 2px 0px var(--shadow-color);
+      cursor: zoom-in;
+      transition: all 0.2s ease;
+    }
+
+    .swot-quadrant:hover {
+      background-color: rgba(235, 225, 200, 0.6);
+      border-color: var(--accent-color);
+      transform: scale(1.01);
+      box-shadow: 4px 4px 0px var(--accent-color);
+    }
+
+    /* Indikator Huruf Latar Belakang (S · W · O · T) */
+    .swot-letter {
+      position: absolute;
+      top: 15px;
+      right: 20px;
+      font-family: 'Georgia', serif;
+      font-size: 2.2rem;
+      font-weight: 900;
+      color: rgba(140, 45, 25, 0.12);
+      line-height: 1;
+      pointer-events: none;
+      user-select: none;
+    }
+
+    .swot-quadrant-title {
+      font-size: 1.25rem;
+      text-transform: uppercase;
+      color: var(--text-color);
+      margin-bottom: 12px;
+      letter-spacing: 1px;
+      border-bottom: 1px dashed var(--border-color);
+      padding-bottom: 6px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      pointer-events: none;
+    }
+
+    .swot-quadrant-text {
+      font-size: 0.88rem;
+      line-height: 1.5;
+      color: #403525;
+      pointer-events: none;
+    }
+
+    .swot-quadrant-text ul {
+      padding-left: 15px;
+    }
+
+    .swot-quadrant-text li {
+      margin-bottom: 6px;
+    }
+
+    .swot-highlight {
+      color: var(--accent-color);
+      font-weight: bold;
+    }
+
+    /* System Pop-up Window / Modal Overlay */
+    .swot-modal-overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(26, 22, 16, 0.7);
+      backdrop-filter: blur(4px);
+      z-index: 1000;
+      display: none;
+      justify-content: center;
+      align-items: center;
+      opacity: 0;
+      transition: opacity 0.25s ease;
+    }
+
+    .swot-modal-overlay.show {
+      display: flex;
+      opacity: 1;
+    }
+
+    /* Window Pop-up Card Design */
+    .swot-modal-window {
+      background-color: var(--bg-color);
+      border: 3px double var(--border-color);
+      width: 650px;
+      padding: 40px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+      position: relative;
+      text-align: left;
+      transform: scale(0.9);
+      transition: transform 0.25s ease;
+      background-image:
+        radial-gradient(var(--shadow-color) 1px, transparent 0),
+        radial-gradient(var(--shadow-color) 1px, transparent 0);
+      background-size: 24px 24px;
+      background-position: 0 0, 12px 12px;
+    }
+
+    .swot-modal-overlay.show .swot-modal-window {
+      transform: scale(1);
+    }
+
+    .swot-modal-close-btn {
+      position: absolute;
+      top: 20px;
+      right: 25px;
+      background: none;
+      border: none;
+      font-size: 1.8rem;
+      color: var(--accent-color);
+      cursor: pointer;
+      line-height: 1;
+    }
+
+    .swot-modal-close-btn:hover {
+      color: var(--text-color);
+    }
+
+    .swot-modal-title {
+      font-size: 1.8rem;
+      text-transform: uppercase;
+      color: var(--accent-color);
+      margin-bottom: 20px;
+      border-bottom: 2px solid var(--border-color);
+      padding-bottom: 10px;
+      letter-spacing: 1.5px;
+    }
+
+    .swot-modal-body {
+      font-size: 1.05rem;
+      line-height: 1.7;
+      color: var(--text-color);
+    }
+
+    .swot-modal-body ul {
+      padding-left: 20px;
+    }
+
+    .swot-modal-body li {
+      margin-bottom: 12px;
+    }
+  </style>
+
+  <div class="swot-layout">
+    <div class="swot-header-frame">
+      <h2 class="swot-main-title">SWOT Analysis</h2>
+      <p class="swot-subtitle">Klik pada kuadran untuk memperbesar jendela visualisasi analisis</p>
+    </div>
+
+    <div class="swot-matrix">
+
+      <div class="swot-quadrant" onclick="zoomSwotQuadrant('strengths')">
+        <div class="swot-letter">S</div>
+        <h3 class="swot-quadrant-title">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#8c2d19" stroke-width="2">
+            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+            <polyline points="22 4 12 14.01 9 11.01"></polyline>
+          </svg>
+          Strengths (Kekuatan)
+        </h3>
+        <div class="swot-quadrant-text">
+          <ul>
+            <li><b>Pangkalan Kode Natif Independen:</b> Memanfaatkan standar ISO C17 dan C++20 murni yang menjamin
+              kontrol penuh atas alokasi memori runtime.</li>
+            <li><b>Anti-Vendor Locking:</b> Penggunaan dependensi open-source (SDL3, Vulkan 1.3) memastikan portabilitas
+              tanpa kuncian lisensi komersial.</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="swot-quadrant" onclick="zoomSwotQuadrant('weaknesses')">
+        <div class="swot-letter">W</div>
+        <h3 class="swot-quadrant-title">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#8c2d19" stroke-width="2">
+            <circle cx="12" cy="12" r="10"></circle>
+            <line x1="12" y1="8" x2="12" y2="12"></line>
+            <line x1="12" y1="16" x2="12.01" y2="16"></line>
+          </svg>
+          Weaknesses (Kelemahan)
+        </h3>
+        <div class="swot-quadrant-text">
+          <ul>
+            <li><span class="swot-highlight">Ketergantungan Komunitas vs Pengembang:</span> Kebebasan mutlak mengurangi
+              interaksi langsung dan ketergantungan pemain terhadap pengembang berkurang drastis.</li>
+            <li><span class="swot-highlight">Potensi Reduksi Pendapatan Konten:</span> Berkurangnya ketergantungan ini
+              berdampak pada hilangnya peluang monetisasi ekspansi berbayar (paid content).</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="swot-quadrant" onclick="zoomSwotQuadrant('opportunities')">
+        <div class="swot-letter">O</div>
+        <h3 class="swot-quadrant-title">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#8c2d19" stroke-width="2">
+            <path d="M23 6l-9.5 9.5-5-5L1 18"></path>
+            <polyline points="17 6 23 6 23 12"></polyline>
+          </svg>
+          Opportunities (Peluang)
+        </h3>
+        <div class="swot-quadrant-text">
+          <ul>
+            <li><span class="swot-highlight">Krisis Keamanan Mod WC4:</span> Pasar menghadapi ancaman berkas modifikasi
+              .apk/.exe mencurigakan yang rentan disusupi malware. Sistem JSON Guardrail hadir sebagai solusi aman.</li>
+            <li><span class="swot-highlight">Stagnasi Finansial Genre:</span> Hambatan batasan mata uang ketat WC4
+              mengunci talenta jenderal serta maraknya pay-to-win pasukan khusus.</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="swot-quadrant" onclick="zoomSwotQuadrant('threats')">
+        <div class="swot-letter">T</div>
+        <h3 class="swot-quadrant-title">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#8c2d19" stroke-width="2">
+            <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
+            <line x1="12" y1="9" x2="12" y2="13"></line>
+            <line x1="12" y1="17" x2="12.01" y2="17"></line>
+          </svg>
+          Threats (Ancaman)
+        </h3>
+        <div class="swot-quadrant-text">
+          <ul>
+            <li><b>Agresivitas IP Kompetitor Besar:</b> Studio besar bermodal masif dapat mereplikasi fungsi parser JSON
+              data-driven kita dengan cepat ke dalam update retail engine mereka untuk mengamankan dominasi.</li>
+          </ul>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <div class="swot-modal-overlay" id="swot-popup-overlay" onclick="closeSwotZoom()">
+    <div class="swot-modal-window" onclick="event.stopPropagation()">
+      <button class="swot-modal-close-btn" onclick="closeSwotZoom()">×</button>
+      <h3 class="swot-modal-title" id="swot-modal-header-title">Title Placeholder</h3>
+      <div class="swot-modal-body" id="swot-modal-main-body">
+        Content Placeholder
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Data repositori teks terperinci khusus untuk jendela modal zoom
+    const swotDataRepository = {
+      strengths: {
+        title: "Strengths (Kekuatan Sistem)",
+        body: `<ul>
+                                <li><b>Pangkalan Kode Natif Independen:</b> Memanfaatkan standar ISO C17 dan C++20 murni yang menjamin kontrol penuh atas alokasi memori runtime, memangkas lag overhead, dan memberikan frame rate rendering yang sangat stabil.</li>
+                                <li><b>Anti-Vendor Locking:</b> Seluruh alur pipa menggunakan dependensi open-source murni (SDL3, Vulkan 1.3, KTX2, Ogg Vorbis). Game dapat dikompilasi ulang secara portabel kapan saja tanpa ketergantungan atau ancaman lisensi engine komersial berbayar di masa depan.</li>
+                               </ul>`
+      },
+      weaknesses: {
+        title: "Weaknesses (Kelemahan & Tantangan)",
+        body: `<ul>
+                                <li><span class="swot-highlight">Ketergantungan Komunitas vs Pengembang:</span> Akibat pemberian akses kebebasan mutlak bagi komunitas untuk memodifikasi regulasi, mekanik, dan unit melalui berkas teks, kebutuhan serta ketergantungan langsung pemain terhadap pengembang akan berkurang drastis setelah game dirilis.</li>
+                                <li><span class="swot-highlight">Potensi Reduksi Pendapatan Konten:</span> Kurangnya ketergantungan ini berimbas negatif terhadap model bisnis tradisional. Peluang monetisasi mikro atau penjualan konten tambahan berbayar (paid DLC expansion) resmi menjadi tidak efektif karena komunitas mampu meluncurkan konten tandingan secara gratis.</li>
+                               </ul>`
+      },
+      opportunities: {
+        title: "Opportunities (Peluang Pasar)",
+        body: `<ul>
+                                <li><span class="swot-highlight">Krisis Keamanan Mod WC4 Global:</span> Pemain World Conqueror 4 saat ini terjebak dalam ekosistem modifikasi eksternal yang berbahaya (menyebarkan berkas .apk/.exe kustom lewat forum ilegal) yang rawan malware. Fitur <b>JSON Guardrail</b> kita masuk sebagai standar baru lingkungan distribusi yang bersih dan terverifikasi aman.</li>
+                                <li><span class="swot-highlight">Stagnasi Finansial & Kejenuhan Pay-to-Win:</span> Komunitas mengeluhkan batasan mata uang ketat WC4 yang membatasi eksplorasi talenta jenderal serta sifat pay-to-win pasukan khusus komersial. Pendekatan open-system Any Conqueror berpeluang besar merebut basis massa tersebut.</li>
+                               </ul>`
+      },
+      threats: {
+        title: "Threats (Ancaman Kompetitor)",
+        body: `<ul>
+                                <li><b>Agresivitas IP Kompetitor Besar:</b> Penerbit game besar dengan modal kapital dan tim engineering masif dapat memantau kesuksesan proyek ini, lalu mereplikasi fungsionalitas parser data-driven berbasis JSON ke dalam pembaruan berkala engine retail mereka dengan cepat demi mematikan daya tarik Any Conqueror di pasar global.</li>
+                               </ul>`
+      }
+    };
+
+    // Fungsi untuk membuka dan menyuntikkan konten ke dalam jendela pop-up
+    function zoomSwotQuadrant(quadrantKey) {
+      const overlay = document.getElementById('swot-popup-overlay');
+      const titleField = document.getElementById('swot-modal-header-title');
+      const bodyField = document.getElementById('swot-modal-main-body');
+
+      titleField.textContent = swotDataRepository[quadrantKey].title;
+      bodyField.innerHTML = swotDataRepository[quadrantKey].body;
+
+      overlay.style.display = 'flex';
+      // Trigger reflow untuk mengaktifkan transisi CSS opacity
+      setTimeout(() => {
+        overlay.classList.add('show');
+      }, 10);
+    }
+
+    // Fungsi untuk menutup jendela pop-up zoom
+    function closeSwotZoom() {
+      const overlay = document.getElementById('swot-popup-overlay');
+      overlay.classList.remove('show');
+
+      // Sembunyikan elemen setelah transisi memudar selesai
+      setTimeout(() => {
+        overlay.style.display = 'none';
+      }, 250);
+    }
+  </script>
+</div>

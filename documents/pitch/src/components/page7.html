@@ -1,0 +1,185 @@
+<div class="slide " id="slide-7">
+  <style>
+    /* Gaya tata letak modular teknis */
+    .tech-layout {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 35px;
+      width: 100%;
+      max-width: 1350px;
+      align-items: stretch;
+      z-index: 10;
+      padding: 10px 0;
+    }
+
+    .tech-column {
+      background-color: rgba(235, 225, 200, 0.3);
+      border: 1px solid var(--border-color);
+      padding: 30px;
+      box-shadow: 3px 3px 0px var(--shadow-color);
+      display: flex;
+      flex-direction: column;
+    }
+
+    .tech-column-title {
+      font-size: 1.6rem;
+      text-transform: uppercase;
+      color: var(--accent-color);
+      margin-bottom: 20px;
+      letter-spacing: 1.5px;
+      border-bottom: 2px double var(--border-color);
+      padding-bottom: 10px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .tech-main-header {
+      text-align: center;
+      margin-bottom: 30px;
+      width: 100%;
+    }
+
+    .tech-title {
+      font-size: 2.8rem;
+      text-transform: uppercase;
+      color: var(--accent-color);
+      margin-bottom: 5px;
+      letter-spacing: 2px;
+      text-shadow: 1px 1px 0px rgba(0, 0, 0, 0.1);
+    }
+
+    .tech-subtitle {
+      font-size: 1.05rem;
+      color: #5c4d3c;
+      font-style: italic;
+    }
+
+    /* Komponen List Spesifikasi Teknis */
+    .tech-spec-list {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      text-align: left;
+    }
+
+    .tech-spec-item h4 {
+      font-size: 1.15rem;
+      text-transform: uppercase;
+      color: var(--text-color);
+      margin-bottom: 5px;
+      letter-spacing: 0.5px;
+      font-family: 'Courier New', monospace;
+      font-weight: bold;
+    }
+
+    .tech-spec-item p {
+      font-size: 0.9rem;
+      line-height: 1.6;
+      color: #403525;
+    }
+
+    .tech-spec-item strong {
+      color: var(--accent-color);
+    }
+
+    .tech-meta-box {
+      margin-top: auto;
+      background-color: rgba(44, 37, 25, 0.05);
+      border: 1px dashed var(--border-color);
+      padding: 12px 15px;
+      font-family: 'Courier New', monospace;
+      font-size: 0.8rem;
+      color: #5c4d3c;
+      text-align: center;
+    }
+  </style>
+
+  <div class="tech-main-header">
+    <h2 class="tech-title">Technical Requirements</h2>
+    <p class="tech-subtitle">Arsitektur Pemrograman Sistem Tingkat Rendah Agnostik Terhadap Vendor</p>
+  </div>
+
+  <div class="tech-layout">
+    <div class="tech-column">
+      <h3 class="tech-column-title">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#8c2d19" stroke-width="2"
+          stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="16 18 22 12 16 6"></polyline>
+          <polyline points="8 6 2 12 8 18"></polyline>
+        </svg>
+        Engineering Core
+      </h3>
+
+      <div class="tech-spec-list">
+        <div class="tech-spec-item">
+          <h4>[ ISO C17 / C++20 Standard ]</h4>
+          <p>Inti simulasi taktis (<i>Game Loop</i>) dibangun menggunakan standar <strong>C17</strong> murni untuk
+            de-alokasi memori deterministik yang cepat, dikombinasikan dengan fitur modern <strong>C++20</strong> untuk
+            manajemen struktur data modular tanpa ekstensi spesifik kompilator vendor.</p>
+        </div>
+
+        <div class="tech-spec-item">
+          <h4>[ SDL3 Windowing & OS Abstraction ]</h4>
+          <p>Menggunakan <strong>SDL3</strong> sebagai satu-satunya dependensi lintas platform. Menangani penangkapan
+            <i>input events</i> (mouse/sentuhan), pembuatan permukaan jendela, dan subsistem audio <b>Ogg Vorbis</b>
+            secara seragam tanpa dependensi eksternal komersial.
+          </p>
+        </div>
+
+        <div class="tech-spec-item">
+          <h4>[ Pure Vulkan 1.3 Graphics API ]</h4>
+          <p>Grafis dikunci pada standardisasi fitur inti <strong>Vulkan 1.3</strong>. Memanfaatkan penyerahan
+            <i>multithreading command buffer</i> secara langsung untuk menjamin portabilitas rendering yang konsisten
+            baik pada GPU desktop maupun perangkat seluler lama.
+          </p>
+        </div>
+      </div>
+
+      <div class="tech-meta-box">
+        Compiler Pipeline: GCC / Clang / MSVC Standard Compliant
+      </div>
+    </div>
+
+    <div class="tech-column">
+      <h3 class="tech-column-title">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#8c2d19" stroke-width="2"
+          stroke-linecap="round" stroke-linejoin="round">
+          <path
+            d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l-7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z">
+          </path>
+          <polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline>
+          <line x1="12" y1="22.08" x2="12" y2="12"></line>
+        </svg>
+        Asset Pipeline
+      </h3>
+
+      <div class="tech-spec-list">
+        <div class="tech-spec-item">
+          <h4>[ Open-Standard SVG Level Maker ]</h4>
+          <p>Pembuatan peta menggunakan dokumen format <strong>SVG (Scalable Vector Graphics)</strong> standar W3C.
+            Skrip kustom Python murni mengekstraksi parameter nodal koordinat ubin heksagon dan kode warna medan
+            (<i>terrain color</i>) secara langsung menjadi data tekstual <b>JSON</b>.</p>
+        </div>
+
+        <div class="tech-spec-item">
+          <h4>[ 2D Texture Array Containers (.ktx2) ]</h4>
+          <p>Aset visual 2D diubah menjadi kontainer terbuka <strong>2D Texture Array (.ktx2)</strong> via <i>toktx</i>
+            Khronos. Dimuat sebagai satu objek <code>VkImage</code> dengan banyak lapisan, memungkinkan <i>fragment
+              shader</i> mengindeks aset tekstur secara langsung tanpa proses binding berulang.</p>
+        </div>
+
+        <div class="tech-spec-item">
+          <h4>[ Unified Single Shader Engine ]</h4>
+          <p>Sistem rendering hanya menggunakan <strong>satu pasang biner shader SPIR-V</strong> (1 Vertex & 1
+            Fragment). Menggambar seluruh elemen visual sebagai bentuk <i>quad 2D</i> via <i>Push Constants</i>,
+            mempercepat pemrosesan filter butiran perkamen secara prosedural.</p>
+        </div>
+      </div>
+
+      <div class="tech-meta-box">
+        Data Integrity: Zero Executable Binary Mod Formats
+      </div>
+    </div>
+  </div>
+</div>

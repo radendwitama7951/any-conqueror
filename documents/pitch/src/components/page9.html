@@ -1,0 +1,278 @@
+<div class="slide " id="slide-9">
+  <style>
+    /* Layout utama dengan pembagian ruang teks dan preview widget */
+    .telemetry-tabbed-layout {
+      display: grid;
+      grid-template-columns: 1.2fr 0.8fr;
+      gap: 40px;
+      width: 100%;
+      max-width: 1300px;
+      height: 100%;
+      align-items: center;
+      z-index: 10;
+      padding: 10px 0;
+    }
+
+    .telemetry-info-pane {
+      text-align: left;
+      display: flex;
+      flex-direction: column;
+      height: 500px;
+      /* Mengunci tinggi agar layout stabil saat tab berganti */
+    }
+
+    .telemetry-title {
+      font-size: 2.8rem;
+      text-transform: uppercase;
+      color: var(--accent-color);
+      margin-bottom: 5px;
+      letter-spacing: 2px;
+      text-shadow: 1px 1px 0px rgba(0, 0, 0, 0.1);
+    }
+
+    .telemetry-subtitle {
+      font-size: 1.05rem;
+      color: #5c4d3c;
+      font-style: italic;
+      margin-bottom: 25px;
+    }
+
+    /* Navigasi Sub-Tab Utama */
+    .telemetry-tabs-nav {
+      display: flex;
+      gap: 15px;
+      margin-bottom: 25px;
+      border-bottom: 1px solid var(--border-color);
+      padding-bottom: 10px;
+    }
+
+    .telemetry-tab-btn {
+      background: none;
+      border: 1px solid transparent;
+      font-family: 'Georgia', serif;
+      font-size: 0.95rem;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      padding: 8px 16px;
+      cursor: pointer;
+      color: #7a664d;
+      transition: all 0.2s ease;
+    }
+
+    .telemetry-tab-btn.active {
+      border-color: var(--border-color);
+      background-color: rgba(188, 163, 122, 0.15);
+      color: var(--accent-color);
+      font-weight: bold;
+    }
+
+    /* Konten per Jendela Tab */
+    .telemetry-tab-content {
+      display: none;
+      animation: fadeInTelemetry 0.3s ease forwards;
+    }
+
+    .telemetry-tab-content.active {
+      display: block;
+    }
+
+    @keyframes fadeInTelemetry {
+      from {
+        opacity: 0;
+        transform: translateY(5px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .telemetry-desc-text {
+      font-size: 1rem;
+      line-height: 1.6;
+      color: #403525;
+      margin-bottom: 20px;
+      font-style: italic;
+    }
+
+    .telemetry-grid-nodes {
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+    }
+
+    .telemetry-node-item h4 {
+      font-size: 1.1rem;
+      text-transform: uppercase;
+      color: var(--text-color);
+      margin-bottom: 4px;
+      letter-spacing: 0.5px;
+      font-weight: bold;
+    }
+
+    .telemetry-node-item p {
+      font-size: 0.9rem;
+      line-height: 1.5;
+      color: #4c3e2e;
+    }
+
+    /* Sisi Kanan: Live Mockup Widget Panel */
+    .telemetry-visual-frame {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+
+    .widget-display-canvas {
+      background-color: rgba(235, 225, 200, 0.4);
+      border: 1px dashed var(--border-color);
+      padding: 30px;
+      box-shadow: 3px 3px 0px var(--shadow-color);
+      text-align: left;
+    }
+
+    .widget-canvas-title {
+      font-family: 'Courier New', monospace;
+      font-size: 0.9rem;
+      font-weight: bold;
+      color: var(--accent-color);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      border-bottom: 1px solid var(--border-color);
+      padding-bottom: 8px;
+      margin-bottom: 15px;
+      text-align: center;
+    }
+
+    .widget-data-row {
+      display: flex;
+      justify-content: space-between;
+      font-family: 'Courier New', monospace;
+      font-size: 0.85rem;
+      color: #403525;
+      border-bottom: 1px dotted rgba(191, 163, 122, 0.5);
+      padding: 6px 0;
+    }
+
+    .widget-canvas-footer {
+      margin-top: 20px;
+      font-family: 'Courier New', monospace;
+      font-size: 0.75rem;
+      color: #8a7355;
+      text-align: center;
+      font-style: italic;
+    }
+  </style>
+
+  <div class="telemetry-tabbed-layout">
+    <div class="telemetry-info-pane">
+      <h2 class="telemetry-title">Telemetry & Privacy</h2>
+      <p class="telemetry-subtitle">Keseimbangan Pengumpulan Statistik Komunitas dengan Proteksi Data Pengguna</p>
+
+      <div class="telemetry-tabs-nav">
+        <button class="telemetry-tab-btn active" onclick="switchTelemetryTab(event, 'tab-community')">Community
+          Analytics</button>
+        <button class="telemetry-tab-btn" onclick="switchTelemetryTab(event, 'tab-privacy')">Security
+          Guardrails</button>
+      </div>
+
+      <div class="telemetry-tab-content active" id="tab-community">
+        <p class="telemetry-desc-text">
+          Sistem dirancang transparan. Data pemakaian dikembalikan penuh ke komunitas untuk membantu kreator melakukan
+          penyeimbangan mekanik (game balancing) skenario buatan mereka.
+        </p>
+        <div class="telemetry-grid-nodes">
+          <div class="telemetry-node-item">
+            <h4>❖ Completion Rate (Win/Loss Ratio)</h4>
+            <p>Menampilkan persentase rasio kemenangan pemain pada metadata unduhan mod, mempermudah pemain mengukur
+              tingkat kesulitan skenario secara instan.</p>
+          </div>
+          <div class="telemetry-node-item">
+            <h4>❖ Average Turn to Victory</h4>
+            <p>Metrik numerik rata-rata jumlah giliran (<i>turn count</i>) komunitas menyelesaikan misi, berfungsi
+              sebagai estimasi durasi skenario taktis.</p>
+          </div>
+          <div class="telemetry-node-item">
+            <h4>❖ Unit Lethality Index</h4>
+            <p>Daftar peringkat unit kustom paling efektif di medan tempur berdasarkan rasio <i>kill/death</i> tertinggi
+              untuk mendeteksi ketidakseimbangan unit.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="telemetry-tab-content" id="tab-privacy">
+        <p class="telemetry-desc-text">
+          Privasi mutlak dan penanganan I/O yang aman dikunci dari dalam program inti demi menjaga integritas data
+          perangkat keras pemain.
+        </p>
+        <div class="telemetry-grid-nodes">
+          <div class="telemetry-node-item">
+            <h4>❖ Absolute Anonymization</h4>
+            <p>Data transmisi murni berupa parameter numerik mekanik game (ID Skenario, Turn, Status Akhir). Sistem
+              dilarang merekam data pribadi seperti IP Address, lokasi, atau Hardware IDs.</p>
+          </div>
+          <div class="telemetry-node-item">
+            <h4>❖ Opt-In Transparency Toggle</h4>
+            <p>Di dalam menu utama atau <i>Paused State</i>, pemain diberi kendali penuh lewat tombol GUI untuk
+              mematikan fitur telemetri ini jika ingin bermain dalam mode privat murni.</p>
+          </div>
+          <div class="telemetry-node-item">
+            <h4>❖ Zero Executable Formats (JSON I/O)</h4>
+            <p>Peladen publik hanya menerima kiriman data teks mentah format <b>JSON</b>. Berkas divalidasi ketat untuk
+              memotong potensi serangan injeksi biner berbahaya.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="telemetry-visual-frame">
+      <div class="widget-display-canvas">
+        <div class="widget-canvas-title">[ Mod Panel Metadata Mockup ]</div>
+        <div class="widget-data-row">
+          <span>Metadata_Source:</span>
+          <span style="color: var(--accent-color); font-weight: bold;">JSON_Tele_Stream</span>
+        </div>
+        <div class="widget-data-row">
+          <span>Completion_Rate:</span>
+          <span style="color: #2a6f2a; font-weight: bold;">Win 35% / Loss 65%</span>
+        </div>
+        <div class="widget-data-row">
+          <span>Avg_Match_Turn:</span>
+          <span>24 Turns (Siklus Makro)</span>
+        </div>
+        <div class="widget-data-row">
+          <span>Top_Lethal_Unit:</span>
+          <span>Custom_Tiger_Kuno (KD: 2.4)</span>
+        </div>
+        <div class="widget-data-row">
+          <span>Dominant_Faction:</span>
+          <span>Faksi_Ksatria_Badung</span>
+        </div>
+        <div class="widget-canvas-footer">
+          Validated via Zero-Dependency Server Pipeline
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function switchTelemetryTab(event, tabId) {
+      // Menggunakan currentTarget.closest untuk mencari elemen slide induk secara dinamis
+      const currentSlide = event.currentTarget.closest('.slide');
+      if (!currentSlide) return;
+
+      const contents = currentSlide.querySelectorAll('.telemetry-tab-content');
+      const buttons = currentSlide.querySelectorAll('.telemetry-tab-btn');
+
+      // Bersihkan status aktif lama
+      contents.forEach(content => content.classList.remove('active'));
+      buttons.forEach(btn => btn.classList.remove('active'));
+
+      // Aktifkan elemen target yang dipilih
+      const targetContent = currentSlide.querySelector(`#${tabId}`);
+      if (targetContent) targetContent.classList.add('active');
+      event.currentTarget.classList.add('active');
+    }
+  </script>
+</div>

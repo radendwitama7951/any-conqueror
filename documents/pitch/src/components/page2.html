@@ -1,0 +1,112 @@
+<div class="slide " id="slide-2">
+  <style>
+    /* Gaya khusus internal untuk mengoptimalkan layout Slide Filosofi */
+    .philosophy-layout {
+      display: grid;
+      grid-template-columns: 1.2fr 0.8fr;
+      gap: 40px;
+      width: 100%;
+      max-width: 1200px;
+      align-items: center;
+      z-index: 10;
+    }
+
+    .philosophy-text-frame {
+      text-align: left;
+      border-left: 3px double var(--border-color);
+      padding-left: 30px;
+    }
+
+    .philosophy-title {
+      font-size: 2.8rem;
+      text-transform: uppercase;
+      color: var(--accent-color);
+      margin-bottom: 20px;
+      letter-spacing: 2px;
+      text-shadow: 1px 1px 0px rgba(0, 0, 0, 0.1);
+    }
+
+    .philosophy-statement {
+      font-size: 1.4rem;
+      line-height: 1.8;
+      color: var(--text-color);
+      margin-bottom: 25px;
+      font-style: italic;
+      font-weight: 500;
+    }
+
+    .philosophy-framework {
+      font-size: 1.1rem;
+      line-height: 1.6;
+      color: #5c4d3c;
+    }
+
+    .philosophy-frameworkstrong {
+      color: var(--accent-color);
+    }
+
+    /* Placeholder Ilustrasi Vektor Mappa Mundi */
+    .philosophy-vector-illustration {
+      width: 100%;
+      height: 380px;
+      border: 1px dashed var(--border-color);
+      background-color: rgba(188, 163, 122, 0.1);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      position: relative;
+      padding: 20px;
+      box-shadow: inset 0 0 20px rgba(44, 37, 25, 0.05);
+    }
+
+    .philosophy-vector-illustration::before {
+      content: '❖';
+      color: var(--border-color);
+      font-size: 2rem;
+      margin-bottom: 15px;
+    }
+
+    .illustration-meta {
+      font-family: 'Courier New', monospace;
+      font-size: 0.8rem;
+      color: #8a7355;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-top: 10px;
+    }
+  </style>
+
+  <div class="philosophy-layout">
+    <div class="philosophy-text-frame">
+      <h2 class="philosophy-title">Filosofi Desain</h2>
+      <p class="philosophy-statement">
+        "Ambil alternatif yang menawarkan kebebasan"
+      </p>
+      <p class="philosophy-framework">
+        <strong>Any Conqueror</strong> dibangun di atas premis bahwa game terbaik adalah media yang memberikan
+        <span class="philosophy-frameworkstrong">kebebasan berkreasi</span> bagi pemain untuk menyalurkan seluruh
+        kapabilitas kreativitas mereka tanpa batasan *konten pengembang*.
+      </p>
+      <br>
+      <p>
+        Dengan memindahkan kendali aturan kepada
+        komunitas,
+        kita memecahkan stagnasi genre taktis tradisional.
+      </p>
+    </div>
+
+    <div class="philosophy-vector-illustration">
+      <svg width="80" height="80" viewBox="0 0 24 24" fill="none" stroke="#8c2d19" stroke-width="1"
+        stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="12" r="10"></circle>
+        <path
+          d="M12 2v20M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z">
+        </path>
+      </svg>
+      <!-- <span style="font-size: 1.1rem; font-weight: bold; margin-top: 15px; color: var(--text-color);">[ Ilustrasi Konsep -->
+      <!--   Kreativitas ]</span> -->
+      <!-- <span class="illustration-meta">Inkscape SVG Template Layout Reference</span> -->
+    </div>
+  </div>
+</div>

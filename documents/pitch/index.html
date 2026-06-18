@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Any Conqueror - Game Design Document Presentation</title>
+  <style>
+    :root {
+      --bg-color: #f2ebd9;
+      --text-color: #2c2519;
+      --accent-color: #8c2d19;
+      --border-color: #bfa37a;
+      --shadow-color: rgba(44, 37, 25, 0.15);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Georgia', serif;
+      background-color: #1a1610;
+      color: var(--text-color);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      overflow: hidden;
+    }
+
+    /* Presentation Container */
+    .presentation-container {
+      width: 100vw;
+      height: 100vh;
+      max-width: 1920px;
+      max-height: 1080px;
+      background-color: var(--bg-color);
+      position: relative;
+      box-shadow: 0 0 30px rgba(0, 0, 0, 0.5);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      overflow: hidden;
+    }
+
+    /* Slide Base Design */
+    .slide {
+      width: 100%;
+      height: 100%;
+      padding: 60px;
+      display: none;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      position: relative;
+      background-image:
+        radial-gradient(var(--shadow-color) 1px, transparent 0),
+        radial-gradient(var(--shadow-color) 1px, transparent 0);
+      background-size: 24px 24px;
+      background-position: 0 0, 12px 12px;
+    }
+
+    .slide.active {
+      display: flex;
+    }
+
+    /* Stylized Mappa Mundi Borders */
+    .slide::before {
+      content: '';
+      position: absolute;
+      top: 20px;
+      left: 20px;
+      right: 20px;
+      bottom: 20px;
+      border: 2px solid var(--border-color);
+      pointer-events: none;
+    }
+
+    .slide::after {
+      content: '';
+      position: absolute;
+      top: 26px;
+      left: 26px;
+      right: 26px;
+      bottom: 26px;
+      border: 1px dashed var(--border-color);
+      pointer-events: none;
+    }
+
+    /* Cover Slide Specifics */
+    .cover-content {
+      text-align: center;
+      max-width: 900px;
+      z-index: 10;
+    }
+
+    .academic-header {
+      font-size: 1.2rem;
+      text-transform: uppercase;
+      letter-spacing: 3px;
+      color: var(--accent-color);
+      margin-bottom: 40px;
+      font-weight: bold;
+    }
+
+    .game-title {
+      font-size: 5rem;
+      font-weight: 900;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      margin-bottom: 10px;
+      color: var(--text-color);
+      text-shadow: 2px 2px 0px var(--border-color);
+    }
+
+    .game-subtitle {
+      font-size: 1.8rem;
+      font-style: italic;
+      margin-bottom: 60px;
+      color: #5c4d3c;
+    }
+
+    .divider {
+      width: 150px;
+      height: 2px;
+      background-color: var(--accent-color);
+      margin: 0 auto 50px auto;
+      position: relative;
+    }
+
+    .divider::before {
+      content: '❖';
+      position: absolute;
+      top: -9px;
+      left: 50%;
+      transform: translateX(-50%);
+      background-color: var(--bg-color);
+      padding: 0 10px;
+      color: var(--accent-color);
+      font-size: 0.8rem;
+    }
+
+    .author-info {
+      font-size: 1.2rem;
+      line-height: 1.8;
+      letter-spacing: 1px;
+    }
+
+    .author-info table {
+      margin: 0 auto;
+      border-collapse: collapse;
+    }
+
+    .author-info td {
+      padding: 5px 15px;
+      text-align: left;
+    }
+
+    .author-info td:first-child {
+      font-weight: bold;
+      color: #5c4d3c;
+      text-align: right;
+    }
+
+    /* Placeholder Slides Styling */
+    .placeholder-title {
+      font-size: 3rem;
+      text-transform: uppercase;
+      color: var(--accent-color);
+      margin-bottom: 20px;
+    }
+
+    .placeholder-text {
+      font-size: 1.5rem;
+      color: #5c4d3c;
+      font-style: italic;
+    }
+
+    /* Navigation Controls */
+    .controls {
+      position: absolute;
+      bottom: 40px;
+      right: 60px;
+      display: flex;
+      gap: 20px;
+      z-index: 100;
+    }
+
+    .nav-btn {
+      background-color: transparent;
+      border: 1px solid var(--border-color);
+      color: var(--text-color);
+      padding: 10px 20px;
+      font-family: 'Georgia', serif;
+      cursor: pointer;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      transition: all 0.2s ease;
+    }
+
+    .nav-btn:hover {
+      background-color: var(--accent-color);
+      color: var(--bg-color);
+      border-color: var(--accent-color);
+    }
+
+    .slide-number {
+      position: absolute;
+      bottom: 45px;
+      left: 60px;
+      font-size: 1rem;
+      font-weight: bold;
+      letter-spacing: 1px;
+      color: #5c4d3c;
+      z-index: 100;
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="presentation-container">
+
+    <!-- SLIDE 1: COVER PAGE -->
+    <div class="slide active" id="slide-1">
+      <div class="cover-content">
+        <div class="academic-header">Pengembangan Permainan Digital • ITB STIKOM Bali</div>
+        <h1 class="game-title">Any Conqueror</h1>
+        <div class="game-subtitle">Game Design Document Presentation</div>
+        <div class="divider"></div>
+        <div class="author-info">
+          <table>
+            <tr>
+              <td>Oleh:</td>
+              <td>Raden Dwitama Baliano</td>
+            </tr>
+            <tr>
+              <td>NIM:</td>
+              <td>240030323</td>
+            </tr>
+            <tr>
+              <td>Dosen Pengampu:</td>
+              <td></td>
+            </tr>
+          </table>
+        </div>
+      </div>
+
+    </div>
+
+
+
+    {{> page2 }}
+
+    {{> page3 }}
+
+    {{> page4 }}
+
+    {{> page5 }}
+
+    {{> page6 }}
+
+    {{> page7 }}
+
+
+    {{> page8 }}
+
+    {{> page9 }}
+
+
+    {{> page10 }}
+
+    {{> page11 }}
+
+    {{> page12 }}
+
+
+    <img alt="" src="wedcard_el_karang.webp"
+      style="position: absolute; scale: 1; z-index: 99; top: -4%; right: -4%; opacity: 0.25; transform: scaleX(-1) rotateZ(-20deg);">
+
+    <img alt="" src="wedcard_el_patra_left.webp"
+      style="position: absolute; scale: 1; z-index: 99; bottom: -8%; left: -2%; transform: scaleX(1); opacity: 0.33;">
+
+    <!-- Navigation Controls -->
+    <div class="slide-number" id="slide-num">1 / 12</div>
+    <div class="controls">
+      <button class="nav-btn" id="prev-btn">Prev</button>
+      <button class="nav-btn" id="next-btn">Next</button>
+    </div>
+
+  </div>
+
+
+  <script type="module" src="src/main.js"></script>
+
+  <script>
+    const slides = document.querySelectorAll('.slide');
+    const slideNumDisplay = document.getElementById('slide-num');
+    const prevBtn = document.getElementById('prev-btn');
+    const nextBtn = document.getElementById('next-btn');
+
+    let currentSlideIndex = 0;
+
+    function updateSlides() {
+      slides.forEach((slide, index) => {
+        if (index === currentSlideIndex) {
+          slide.classList.add('active');
+        } else {
+          slide.classList.remove('active');
+        }
+      });
+      slideNumDisplay.textContent = `${currentSlideIndex + 1} / ${slides.length}`;
+    }
+
+    nextBtn.addEventListener('click', () => {
+      if (currentSlideIndex < slides.length - 1) {
+        currentSlideIndex++;
+        updateSlides();
+      }
+    });
+
+    prevBtn.addEventListener('click', () => {
+      if (currentSlideIndex > 0) {
+        currentSlideIndex--;
+        updateSlides();
+      }
+    });
+
+    // Keyboard Controls (Arrow keys)
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'ArrowRight' || e.key === ' ') {
+        if (currentSlideIndex < slides.length - 1) {
+          currentSlideIndex++;
+          updateSlides();
+        }
+      } else if (e.key === 'ArrowLeft') {
+        if (currentSlideIndex > 0) {
+          currentSlideIndex--;
+          updateSlides();
+        }
+      }
+    });
+  </script>
+</body>
+
+</html>

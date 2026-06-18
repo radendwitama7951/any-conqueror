@@ -6,13 +6,16 @@ extern "C" {
 #endif  // __cplusplus
 
 #include <stdbool.h>
-#include "app_ctx.h"
+
+typedef struct {
+  float clrscr[3];
+} app_guistate_t;
 
 /*
  * gui_entry
  * */
-bool app_guisetup(app_ctx_t* p_ctx);
-bool app_guimain(app_ctx_t* p_ctx);
+bool app_guisetup(app_guistate_t* p_ctx);
+bool app_guimain(app_guistate_t* p_ctx);
 
 /*
  * IMGUI WRAPPER

@@ -1,0 +1,447 @@
+<!-- SLIDE 10: BUSINESS MODEL CANVAS (ZOOMABLE MODAL) -->
+<div class="slide " id="slide-11">
+  <style>
+    /* Tata Letak Utama BMC Grid */
+    .bmc-layout {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      width: 100%;
+      max-width: 1350px;
+      height: 100%;
+      z-index: 10;
+      padding: 5px 0;
+    }
+
+    .bmc-header-frame {
+      text-align: center;
+      margin-bottom: 15px;
+    }
+
+    .bmc-main-title {
+      font-size: 2.6rem;
+      text-transform: uppercase;
+      color: var(--accent-color);
+      letter-spacing: 2px;
+      margin-bottom: 5px;
+      text-shadow: 1px 1px 0px rgba(0, 0, 0, 0.1);
+    }
+
+    .bmc-subtitle {
+      font-size: 1rem;
+      color: #5c4d3c;
+      font-style: italic;
+    }
+
+    /* Struktur Grid Matriks BMC Kustom */
+    .bmc-matrix-grid {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      grid-template-rows: repeat(3, auto);
+      gap: 12px;
+      width: 100%;
+    }
+
+    /* Pengaturan Blok Komponen BMC Interaktif */
+    .bmc-cell {
+      background-color: rgba(235, 225, 200, 0.25);
+      border: 1px solid var(--border-color);
+      padding: 15px;
+      text-align: left;
+      cursor: zoom-in;
+      transition: all 0.2s ease;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .bmc-cell:hover {
+      background-color: rgba(235, 225, 200, 0.55);
+      border-color: var(--accent-color);
+      box-shadow: 2px 2px 0px var(--accent-color);
+      transform: scale(1.005);
+    }
+
+    /* Pengaturan Span Row/Col Sesuai Aturan Standar BMC */
+    .cell-kp {
+      grid-row: span 2;
+    }
+
+    .cell-ka {
+      grid-column: 2;
+    }
+
+    .cell-kr {
+      grid-column: 2;
+      grid-row: 2;
+    }
+
+    .cell-vp {
+      grid-row: span 2;
+    }
+
+    .cell-cr {
+      grid-column: 4;
+    }
+
+    .cell-ch {
+      grid-column: 4;
+      grid-row: 2;
+    }
+
+    .cell-cs {
+      grid-row: span 2;
+    }
+
+    .cell-cst {
+      grid-column: span 3;
+    }
+
+    .cell-rws {
+      grid-column: span 2;
+    }
+
+    .bmc-cell-title {
+      font-size: 0.95rem;
+      text-transform: uppercase;
+      color: var(--accent-color);
+      margin-bottom: 8px;
+      border-bottom: 1px dashed var(--border-color);
+      padding-bottom: 4px;
+      font-weight: bold;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      pointer-events: none;
+    }
+
+    .bmc-cell-text {
+      font-size: 0.82rem;
+      line-height: 1.4;
+      color: #403525;
+      pointer-events: none;
+    }
+
+    .bmc-cell-text ul {
+      padding-left: 12px;
+      margin: 0;
+    }
+
+    .bmc-cell-text li {
+      margin-bottom: 4px;
+    }
+
+    /* Overlay Sistem Pop-up Pop-up Window */
+    .bmc-modal-overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(26, 22, 16, 0.7);
+      backdrop-filter: blur(4px);
+      z-index: 1000;
+      display: none;
+      justify-content: center;
+      align-items: center;
+      opacity: 0;
+      transition: opacity 0.25s ease;
+    }
+
+    .bmc-modal-overlay.show {
+      display: flex;
+      opacity: 1;
+    }
+
+    .bmc-modal-window {
+      background-color: var(--bg-color);
+      border: 3px double var(--border-color);
+      width: 600px;
+      padding: 35px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+      position: relative;
+      text-align: left;
+      transform: scale(0.9);
+      transition: transform 0.25s ease;
+      background-image:
+        radial-gradient(var(--shadow-color) 1px, transparent 0),
+        radial-gradient(var(--shadow-color) 1px, transparent 0);
+      background-size: 24px 24px;
+      background-position: 0 0, 12px 12px;
+    }
+
+    .bmc-modal-overlay.show .bmc-modal-window {
+      transform: scale(1);
+    }
+
+    .bmc-modal-close-btn {
+      position: absolute;
+      top: 15px;
+      right: 20px;
+      background: none;
+      border: none;
+      font-size: 1.8rem;
+      color: var(--accent-color);
+      cursor: pointer;
+      line-height: 1;
+    }
+
+    .bmc-modal-close-btn:hover {
+      color: var(--text-color);
+    }
+
+    .bmc-modal-title {
+      font-size: 1.6rem;
+      text-transform: uppercase;
+      color: var(--accent-color);
+      margin-bottom: 15px;
+      border-bottom: 2px solid var(--border-color);
+      padding-bottom: 8px;
+      letter-spacing: 1px;
+    }
+
+    .bmc-modal-body {
+      font-size: 1rem;
+      line-height: 1.6;
+      color: var(--text-color);
+    }
+
+    .bmc-modal-body ul {
+      padding-left: 18px;
+    }
+
+    .bmc-modal-body li {
+      margin-bottom: 10px;
+    }
+  </style>
+
+  <div class="bmc-layout">
+    <!-- Header Atas Slide -->
+    <div class="bmc-header-frame">
+      <h2 class="bmc-main-title">Business Model Canvas</h2>
+      <p class="bmc-subtitle">Kerangka Kerja Strategis Manajemen Monetisasi & Keberlanjutan Proyek</p>
+    </div>
+
+    <!-- Struktur Matriks BMC 5 Kolom Klasik -->
+    <div class="bmc-matrix-grid">
+
+      <!-- 1. Key Partners -->
+      <div class="bmc-cell cell-kp" onclick="zoomBmcCell('kp')">
+        <div class="bmc-cell-title">⛓ Key Partners</div>
+        <div class="bmc-cell-text">
+          <ul>
+            <li>Kreator Konten & Modders Komunitas</li>
+            <li>Github/GitLab Platform hosting</li>
+            <li>Penyedia Repositori Mod Terbuka</li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- 2. Key Activities -->
+      <div class="bmc-cell cell-ka" onclick="zoomBmcCell('ka')">
+        <div class="bmc-cell-title">⚙ Key Activities</div>
+        <div class="bmc-cell-text">
+          <ul>
+            <li>Pemeliharaan Kode Inti C17/C++20</li>
+            <li>Optimalisasi Pipeline Vulkan 1.3</li>
+            <li>Validasi Keamanan Parser JSON</li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- 3. Key Resources -->
+      <div class="bmc-cell cell-kr" onclick="zoomBmcCell('kr')">
+        <div class="bmc-cell-title">💎 Key Resources</div>
+        <div class="bmc-cell-text">
+          <ul>
+            <li>Engine Grafis Lintas Platform</li>
+            <li>Dokumentasi Skema JSON Terbuka</li>
+            <li>Infrastruktur Server Telemetri</li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- 4. Value Propositions -->
+      <div class="bmc-cell cell-vp" onclick="zoomBmcCell('vp')">
+        <div class="bmc-cell-title">🎯 Value Propositions</div>
+        <div class="bmc-cell-text">
+          <ul>
+            <li><b>Ekosistem Mod Terbuka & Aman:</b> Kebebasan modifikasi total via JSON tanpa celah injeksi biner.</li>
+            <li><b>Aksesibilitas Talenta Penuh:</b> Mekanik non-pay-to-win, eksplorasi penuh tanpa batas mata uang
+              premium.</li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- 5. Customer Relationships -->
+      <div class="bmc-cell cell-cr" onclick="zoomBmcCell('cr')">
+        <div class="bmc-cell-title">🤝 Customer Relationships</div>
+        <div class="bmc-cell-text">
+          <ul>
+            <li>Transparansi Telemetri Komunitas</li>
+            <li>Dukungan Ekosistem Kreator Lokal</li>
+            <li>Repositori Kode Terbuka Transparan</li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- 6. Channels -->
+      <div class="bmc-cell cell-ch" onclick="zoomBmcCell('ch')">
+        <div class="bmc-cell-title">📍 Channels</div>
+        <div class="bmc-cell-text">
+          <ul>
+            <li>Forum Komunitas Strategi Taktis</li>
+            <li>Googe Play Store</li>
+            <li>Microsoft Store</li>
+            <li>Portal Panel Unduhan Mod In-Game</li>
+            <li>Dokumentasi Pengembang Terbuka</li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- 7. Customer Segments -->
+      <div class="bmc-cell cell-cs" onclick="zoomBmcCell('cs')">
+        <div class="bmc-cell-title">👥 Customer Segments</div>
+        <div class="bmc-cell-text">
+          <ul>
+            <li>Pemain WC4 yang Jenuh Pay-To-Win</li>
+            <li>Modders yang Membutuhkan Proteksi</li>
+            <li>Komunitas Gamer Taktis Hardcore</li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- 8. Cost Structure -->
+      <div class="bmc-cell cell-cst" onclick="zoomBmcCell('cst')">
+        <div class="bmc-cell-title">💰 Cost Structure</div>
+        <div class="bmc-cell-text">
+          <ul>
+            <li>Biaya Sewa Infrastruktur Cloud Server Pemproses Alur Validasi JSON & Telemetri</li>
+            <li>Alokasi Waktu Pemeliharaan Kompatibilitas Runtime Kompilator (GCC, Clang, MSVC)</li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- 9. Revenue Streams -->
+      <div class="bmc-cell cell-rws" onclick="zoomBmcCell('rws')">
+        <div class="bmc-cell-title">💵 Revenue Streams</div>
+        <div class="bmc-cell-text">
+          <ul>
+            <li>Sumbangan Komunitas Sukarela (Donasi Kosmetik/Tip)</li>
+            <li>Lisensi Komersial Engine untuk IP Sejarah Regional Lain</li>
+          </ul>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Jendela Pop-up Modal BMC (Hidden by Default) -->
+  <div class="bmc-modal-overlay" id="bmc-popup-overlay" onclick="closeBmcZoom()">
+    <div class="bmc-modal-window" onclick="event.stopPropagation()">
+      <button class="bmc-modal-close-btn" onclick="closeBmcZoom()">×</button>
+      <h3 class="bmc-modal-title" id="bmc-modal-header-title">BMC Heading Placeholder</h3>
+      <div class="bmc-modal-body" id="bmc-modal-main-body">
+        BMC Content Body Placeholder
+      </div>
+    </div>
+  </div>
+
+  <!-- JavaScript Runtime Engine Khusus Slide 10 -->
+  <script>
+    // Repositori Data Terperinci untuk Jendela Pop-up Modal BMC
+    const bmcDataRepository = {
+      kp: {
+        title: "Key Partners (Mitra Utama)",
+        body: `<ul>
+                                <li><b>Kreator Konten & Modders:</b> Mitra vital yang menyuplai variasi skenario, peta sejarah baru, dan penyeimbangan unit untuk memperpanjang siklus hidup game.</li>
+                                <li><b>Platform Repositori Publik:</b> Tempat penyimpanan aset dan skrip integrasi alat bantu modifikasi agar mudah diakses secara global.</li>
+                                <li><b>Komunitas Penerjemah Lokal:</b> Membantu lokalisasi konten bahasa ke wilayah taktis spesifik tanpa biaya korporat besar.</li>
+                               </ul>`
+      },
+      ka: {
+        title: "Key Activities (Aktivitas Utama)",
+        body: `<ul>
+                                <li><b>Pemeliharaan Arsitektur Kode:</b> Menjamin stabilitas basis kode C17 dan C++20 tetap bersih, modular, dan kompatibel lintas platform.</li>
+                                <li><b>Optimalisasi Pipeline Grafis:</b> Memastikan driver Vulkan 1.3 dapat berjalan efisien pada perangkat keras lama maupun mutakhir tanpa penurunan frame rate.</li>
+                                <li><b>Audit & Validasi Keamanan:</b> Memperbarui sistem pertahanan filter I/O skema JSON untuk menangkal ancaman injeksi biner berbahaya dari luar.</li>
+                               </ul>`
+      },
+      kr: {
+        title: "Key Resources (Sumber Daya Utama)",
+        body: `<ul>
+                                <li><b>Engine Independen Data-Driven:</b> Struktur perangkat lunak internal yang modular dan agnostik terhadap aset, siap memproses perubahan visual lewat konfigurasi teks instan.</li>
+                                <li><b>Skema Struktur Dokumen JSON:</b> Dokumentasi standarisasi tata kelola data permainan yang menjadi fondasi modifikasi aman bagi kreator.</li>
+                                <li><b>Infrastruktur Cloud Minimalis:</b> Server telemetri dengan overhead rendah untuk memproses data statistik pertandingan komunitas secara anonim.</li>
+                               </ul>`
+      },
+      vp: {
+        title: "Value Propositions (Proposisi Nilai)",
+        body: `<ul>
+                                <li><b>Ekosistem Mod Aman & Transparan:</b> Menyelesaikan krisis malware modifikasi retail (seperti pada WC4) melalui pembatasan I/O teks JSON yang terverifikasi aman oleh engine.</li>
+                                <li><b>Eksplorasi Mekanik Adil (Non Pay-to-Win):</b> Menghilangkan batasan finansial buatan pada sistem perkembangan jenderal dan pasukan khusus, mengembalikan esensi murni dari genre strategi taktis berbasis keterampilan makro.</li>
+                               </ul>`
+      },
+      cr: {
+        title: "Customer Relationships (Hubungan Pelanggan)",
+        body: `<ul>
+                                <li><b>Transparansi Pengelolaan Data:</b> Hubungan dibangun di atas kepercayaan dengan mengembalikan 100% data telemetri anonim kepada komunitas demi membantu proses balancing skenario buatan mereka.</li>
+                                <li><b>Model Pengembangan Terbuka:</b> Mendengarkan umpan balik teknis dari komunitas modders secara langsung untuk memperbarui fungsionalitas engine inti.</li>
+                               </ul>`
+      },
+      ch: {
+        title: "Channels (Saluran Distribusi)",
+        body: `<ul>
+                                <li><b>In-Game Download Panel Widget:</b> Integrasi antarmuka GUI langsung di dalam game yang menampilkan statistik riil (Win rate, Avg turns) dan mempermudah unduhan skenario.</li>
+                                <li><b>Hub Komunitas Organik:</b> Memanfaatkan forum diskusi strategi taktis, subreddit, dan peladen chat komunitas untuk distribusi informasi serta dokumentasi alat bantu mod.</li>
+                               </ul>`
+      },
+      cs: {
+        title: "Customer Segments (Segmentasi Pasar)",
+        body: `<ul>
+                                <li><b>Pemain WC4 yang Kecewa:</b> Basis massa besar yang jenuh dengan monetisasi agresif jenderal premium dan pasukan khusus berbayar.</li>
+                                <li><b>Kreator Konten & Modders:</b> Pengguna tingkat lanjut yang mencari platform pengembangan skenario perang sejarah yang stabil, aman, dan terdokumentasi rapi.</li>
+                                <li><b>Penggemar Strategi Garis Keras:</b> Gamer taktis yang memprioritaskan kedalaman simulasi dan keadilan mekanik di atas pemolesan grafis komersial.</li>
+                               </ul>`
+      },
+      cst: {
+        title: "Cost Structure (Struktur Biaya)",
+        body: `<ul>
+                                <li><b>Biaya Operasional Server:</b> Pengeluaran untuk pemeliharaan server cloud data I/O JSON dan sinkronisasi API telemetri pertandingan.</li>
+                                <li><b>Waktu Pengembangan (Engineering Hours):</b> Investasi waktu untuk menjaga kompatibilitas multi-kompilator standar tanpa ekstensi vendor pihak ketiga demi portabilitas jangka panjang.</li>
+                               </ul>`
+      },
+      rws: {
+        title: "Revenue Streams (Arus Pendapatan alternatif)",
+        body: `<ul>
+                                <li><b>Donasi & Dukungan Sukarela Komunitas:</b> Mengganti model DLC berbayar dengan dukungan pendanaan sukarela ( crowdfunding / tip ) dari basis massa yang loyal terhadap transparansi proyek.</li>
+                                <li><b>B2B Licensing Proyek Sejarah Regional:</b> Menjual lisensi komersial arsitektur engine data-driven ini kepada pengembang atau institusi lain yang ingin membangun game simulasi taktis berbasis peta sejarah lokal mereka sendiri secara cepat.</li>
+                               </ul>`
+      }
+    };
+
+    // Fungsi Membuka dan Menyuntikkan Data ke Jendela Modal BMC
+    function zoomBmcCell(cellKey) {
+      const overlay = document.getElementById('bmc-popup-overlay');
+      const titleField = document.getElementById('bmc-modal-header-title');
+      const bodyField = document.getElementById('bmc-modal-main-body');
+
+      titleField.textContent = bmcDataRepository[cellKey].title;
+      bodyField.innerHTML = bmcDataRepository[cellKey].body;
+
+      overlay.style.display = 'flex';
+      setTimeout(() => {
+        overlay.classList.add('show');
+      }, 10);
+    }
+
+    // Fungsi Menutup Jendela Modal BMC
+    function closeBmcZoom() {
+      const overlay = document.getElementById('bmc-popup-overlay');
+      overlay.classList.remove('show');
+      setTimeout(() => {
+        overlay.style.display = 'none';
+      }, 250);
+    }
+  </script>
+</div>

@@ -1,0 +1,198 @@
+<div class="slide" id="slide-5">
+  <style>
+    /* Gaya khusus untuk mengoptimalkan visualisasi State Hirarki */
+    .state-layout {
+      display: grid;
+      grid-template-columns: 1fr 1.2fr;
+      gap: 40px;
+      width: 100%;
+      max-width: 1300px;
+      align-items: center;
+      z-index: 10;
+    }
+
+    .state-info-frame {
+      text-align: left;
+    }
+
+    .state-main-title {
+      font-size: 2.8rem;
+      text-transform: uppercase;
+      color: var(--accent-color);
+      margin-bottom: 15px;
+      letter-spacing: 2px;
+      text-shadow: 1px 1px 0px rgba(0, 0, 0, 0.1);
+    }
+
+    .state-description {
+      font-size: 1.1rem;
+      line-height: 1.7;
+      color: #5c4d3c;
+      margin-bottom: 25px;
+      font-style: italic;
+    }
+
+    .state-philosophy-box {
+      background-color: rgba(140, 45, 25, 0.05);
+      border-left: 3px solid var(--accent-color);
+      padding: 15px 20px;
+      font-size: 0.95rem;
+      line-height: 1.6;
+      color: #403525;
+    }
+
+    /* Visualisasi Komponen Berjenjang (Hierarchical Stack) */
+    .state-stack-container {
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+      width: 100%;
+    }
+
+    .state-layer-card {
+      background-color: rgba(235, 225, 200, 0.5);
+      border: 1px solid var(--border-color);
+      padding: 20px;
+      position: relative;
+      box-shadow: 2px 2px 0px var(--shadow-color);
+      transition: all 0.2s ease;
+    }
+
+    .state-layer-card:hover {
+      background-color: rgba(235, 225, 200, 0.8);
+      border-color: var(--accent-color);
+      transform: translateX(5px);
+    }
+
+    .layer-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+      border-bottom: 1px dashed var(--border-color);
+      padding-bottom: 8px;
+    }
+
+    .layer-title {
+      font-size: 1.2rem;
+      text-transform: uppercase;
+      font-weight: bold;
+      color: var(--text-color);
+      letter-spacing: 1px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .layer-scope {
+      font-family: 'Courier New', monospace;
+      font-size: 0.75rem;
+      font-weight: bold;
+      color: var(--accent-color);
+      background-color: rgba(140, 45, 25, 0.1);
+      padding: 2px 8px;
+    }
+
+    .layer-details {
+      font-size: 0.9rem;
+      line-height: 1.5;
+      color: #4c3e2e;
+    }
+
+    .layer-details ul {
+      margin-top: 5px;
+      padding-left: 20px;
+    }
+
+    .layer-details li {
+      margin-bottom: 3px;
+    }
+  </style>
+
+  <div class="state-layout">
+    <div class="state-info-frame">
+      <h2 class="state-main-title">State Management</h2>
+      <p class="state-description">
+        Pemisahan siklus hidup aplikasi.
+      </p>
+      <div class="state-philosophy-box">
+        <strong>Data-Driven Approach:</strong> Komponen dievaluasi secara berkala saat
+        <i>Update Loop</i>
+        tinggi.
+      </div>
+    </div>
+
+    <div class="state-stack-container">
+
+      <div class="state-layer-card">
+        <div class="layer-header">
+          <div class="layer-title">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#8c2d19" stroke-width="2"
+              stroke-linecap="round" stroke-linejoin="round">
+              <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
+              <line x1="8" y1="21" x2="16" y2="21"></line>
+              <line x1="12" y1="17" x2="12" y2="21"></line>
+            </svg>
+            1. App State (Framework Routines)
+          </div>
+          <span class="layer-scope">SDL3 + Vulkan Lifecycle</span>
+        </div>
+        <div class="layer-details">
+          Mengendalikan rutinitas inti runtime aplikasi natif dari nol.
+          <ul>
+            <li><b>Init State:</b>
+              Alokasi Swapchain GPU, driver jaringan, pendaftaran plugin mod.
+            </li>
+            <li><b>Update & Render State:</b> Sinkronisasi loop penangkapan input & pengiriman command buffer.</li>
+            <li><b>Cleanup State:</b> Operasi DeviceWaitIdle dan de-alokasi buffer grafis VRAM secara bersih.</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="state-layer-card">
+        <div class="layer-header">
+          <div class="layer-title">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#8c2d19" stroke-width="2"
+              stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="10"></circle>
+              <polyline points="12 6 12 12 16 14"></polyline>
+            </svg>
+            2. Game State (Match Sessions)
+          </div>
+          <span class="layer-scope">Global Rules Loop</span>
+        </div>
+        <div class="layer-details">
+          Mengatur regulasi giliran faksi serta sinkronisasi data pemain.
+          <ul>
+            <li><b>Player Turn State:</b> Aktivasi UI interaktif dan pemrosesan ekonomi berkala.</li>
+            <li><b>AI Turn State:</b> Blokir input manusia, pemicuan Behavior Trees taktis unit musuh.</li>
+            <li><b>Paused State:</b> Penguncian simulasi, overlay pengaturan menu modular.</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="state-layer-card">
+        <div class="layer-header">
+          <div class="layer-title">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#8c2d19" stroke-width="2"
+              stroke-linecap="round" stroke-linejoin="round">
+              <polygon points="5 3 19 12 5 21 5 3"></polygon>
+            </svg>
+            3. Entity State (Local Objects)
+          </div>
+          <span class="layer-scope">Pure Data Component</span>
+        </div>
+        <div class="layer-details">
+          Disimpan murni sebagai sekumpulan data mentah yang diatur oleh sistem eksekusi (ECS).
+          <ul>
+            <li><b>Idle State:</b> Loop animasi statis, menunggu instruksi.</li>
+            <li><b>Moving State:</b> Pembaruan parameter koordinat grid heksagon & poin pergerakan.</li>
+            <li><b>Combat State:</b> Kalkulasi damage (Combat Resolution) & sinkronisasi audio dan animasi
+              tembakan.</li>
+          </ul>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>

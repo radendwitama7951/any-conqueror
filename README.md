@@ -1,5 +1,3 @@
----
-
 # Any Conqueror
 ## by Raden Dwitama B
 

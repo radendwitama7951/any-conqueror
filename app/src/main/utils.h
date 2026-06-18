@@ -95,25 +95,26 @@ static inline void app_init_logger() {
     }                                                                \
   } while (0)
 
-#define app_vkchk_sc(cond, update_flag)                                         \
-  do {                                                                          \
-    /* This will fail to compile if update_flag is not a pointer */             \
-    _Generic((update_flag), bool*: (void)0, int*: (void)0, default: ((void)0)); \
-                                                                                \
-    VkResult res = (cond);                                                      \
-    if (res < VK_SUCCESS) {                                                     \
-      if (res == VK_ERROR_OUT_OF_DATE_KHR) {                                    \
-        *(update_flag) = true; /* Dereference to update */                      \
-        break;                                                                  \
-      }                                                                         \
-      log_error("[app] app_vkchk_sc: %d", (int)res);                            \
-      if (APP_CHK_FATAL)                                                        \
-        exit(1);                                                                \
-    }                                                                           \
+#define app_vkchk_sc(cond, update_flag)                                             \
+  do {                                                                              \
+    /* This will fail to compile if update_flag is not a pointer */                 \
+    /*_Generic((update_flag), bool*: (void)0, int*: (void)0, default: ((void)0));*/ \
+                                                                                    \
+    VkResult res = (cond);                                                          \
+    if (res < VK_SUCCESS) {                                                         \
+      if (res == VK_ERROR_OUT_OF_DATE_KHR) {                                        \
+        (update_flag) = true; /* Dereference to update */                           \
+        break;                                                                      \
+      }                                                                             \
+      log_error("[app] app_vkchk_sc: %d", (int)res);                                \
+      if (APP_CHK_FATAL)                                                            \
+        exit(1);                                                                    \
+    }                                                                               \
   } while (0)
 
 #define APP_UTIL_COLOR_SRGBA(r, g, b, a) \
-  SDL_pow((r), 2.2f), SDL_pow((g), 2.2f), SDL_pow((b), 2.2f), a
+  SDL_powf((r), 2.2f), SDL_powf((g), 2.2f), SDL_powf((b), 2.2f), a
+#define APP_UTIL_COLOR_SRGB(r, g, b) SDL_powf((r), 2.2f), SDL_powf((g), 2.2f), SDL_powf((b), 2.2f)
 
 #define APP_UTIL_CLAMP(val, min, max) ((val) < (min) ? (min) : ((val) > (max) ? (max) : (val)))
 

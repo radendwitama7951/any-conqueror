@@ -1,0 +1,220 @@
+{
+	"configurations" : 
+	[
+		{
+			"directories" : 
+			[
+				{
+					"build" : ".",
+					"childIndexes" : 
+					[
+						1
+					],
+					"jsonFile" : "directory-.-Debug-f5ebdc15457944623624.json",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "3.10.0"
+					},
+					"projectIndex" : 0,
+					"source" : "."
+				},
+				{
+					"build" : "app",
+					"childIndexes" : 
+					[
+						2,
+						3,
+						4
+					],
+					"jsonFile" : "directory-app-Debug-94c5f210ca04b1028ae5.json",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "3.10.0"
+					},
+					"parentIndex" : 0,
+					"projectIndex" : 0,
+					"source" : "app",
+					"targetIndexes" : 
+					[
+						3,
+						4,
+						5,
+						6
+					]
+				},
+				{
+					"build" : "_deps/sdl3-build",
+					"jsonFile" : "directory-_deps.sdl3-build-Debug-6fdaef7415ce4d862250.json",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "3.16"
+					},
+					"parentIndex" : 1,
+					"projectIndex" : 1,
+					"source" : "/home/dwitama/Documents/devel/cpp/any-conqueror/android-project/app/.cxx/Debug/242d5n4i/arm64-v8a/_deps/sdl3-src",
+					"targetIndexes" : 
+					[
+						0,
+						1,
+						2
+					]
+				},
+				{
+					"build" : "_deps/volk-build",
+					"jsonFile" : "directory-_deps.volk-build-Debug-4f6661d8e6e14a43c5db.json",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "3.5"
+					},
+					"parentIndex" : 1,
+					"projectIndex" : 2,
+					"source" : "/home/dwitama/Documents/devel/cpp/any-conqueror/android-project/app/.cxx/Debug/242d5n4i/arm64-v8a/_deps/volk-src",
+					"targetIndexes" : 
+					[
+						7
+					]
+				},
+				{
+					"build" : "_deps/vma-build",
+					"jsonFile" : "directory-_deps.vma-build-Debug-df5759cb03a5b5a99410.json",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "3.15"
+					},
+					"parentIndex" : 1,
+					"projectIndex" : 3,
+					"source" : "/home/dwitama/Documents/devel/cpp/any-conqueror/android-project/app/.cxx/Debug/242d5n4i/arm64-v8a/_deps/vma-src"
+				}
+			],
+			"name" : "Debug",
+			"projects" : 
+			[
+				{
+					"childIndexes" : 
+					[
+						1,
+						2,
+						3
+					],
+					"directoryIndexes" : 
+					[
+						0,
+						1
+					],
+					"name" : "any-conqueror",
+					"targetIndexes" : 
+					[
+						3,
+						4,
+						5,
+						6
+					]
+				},
+				{
+					"directoryIndexes" : 
+					[
+						2
+					],
+					"name" : "SDL3",
+					"parentIndex" : 0,
+					"targetIndexes" : 
+					[
+						0,
+						1,
+						2
+					]
+				},
+				{
+					"directoryIndexes" : 
+					[
+						3
+					],
+					"name" : "volk",
+					"parentIndex" : 0,
+					"targetIndexes" : 
+					[
+						7
+					]
+				},
+				{
+					"directoryIndexes" : 
+					[
+						4
+					],
+					"name" : "VMA",
+					"parentIndex" : 0
+				}
+			],
+			"targets" : 
+			[
+				{
+					"directoryIndex" : 2,
+					"id" : "SDL3-shared::@405c074760d2f6728126",
+					"jsonFile" : "target-SDL3-shared-Debug-8623008e3c90699e99a0.json",
+					"name" : "SDL3-shared",
+					"projectIndex" : 1
+				},
+				{
+					"directoryIndex" : 2,
+					"id" : "SDL3_test::@405c074760d2f6728126",
+					"jsonFile" : "target-SDL3_test-Debug-9eca4127d282b2af6417.json",
+					"name" : "SDL3_test",
+					"projectIndex" : 1
+				},
+				{
+					"directoryIndex" : 2,
+					"id" : "SDL_uclibc::@405c074760d2f6728126",
+					"jsonFile" : "target-SDL_uclibc-Debug-c6528da33afa1cdd9ff9.json",
+					"name" : "SDL_uclibc",
+					"projectIndex" : 1
+				},
+				{
+					"directoryIndex" : 1,
+					"id" : "any-conqueror::@5f5a17c01335469806cb",
+					"jsonFile" : "target-any-conqueror-Debug-07ae11457647b28af0fc.json",
+					"name" : "any-conqueror",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 1,
+					"id" : "any-conqueror-bundle-textures::@5f5a17c01335469806cb",
+					"jsonFile" : "target-any-conqueror-bundle-textures-Debug-05adc158736b7a0f8a91.json",
+					"name" : "any-conqueror-bundle-textures",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 1,
+					"id" : "any-conqueror-compile-shaders::@5f5a17c01335469806cb",
+					"jsonFile" : "target-any-conqueror-compile-shaders-Debug-f5b06358d4a53c5fc97b.json",
+					"name" : "any-conqueror-compile-shaders",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 1,
+					"id" : "any-conqueror-run::@5f5a17c01335469806cb",
+					"jsonFile" : "target-any-conqueror-run-Debug-66ded615f52f9326031a.json",
+					"name" : "any-conqueror-run",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 3,
+					"id" : "volk::@2f990ff50bbcc7f22b46",
+					"jsonFile" : "target-volk-Debug-2a30abb1dab1d9394866.json",
+					"name" : "volk",
+					"projectIndex" : 2
+				}
+			]
+		}
+	],
+	"kind" : "codemodel",
+	"paths" : 
+	{
+		"build" : "/home/dwitama/Documents/devel/cpp/any-conqueror/android-project/app/.cxx/Debug/242d5n4i/arm64-v8a",
+		"source" : "/home/dwitama/Documents/devel/cpp/any-conqueror/android-project/app/jni"
+	},
+	"version" : 
+	{
+		"major" : 2,
+		"minor" : 7
+	}
+}

@@ -3,6 +3,7 @@
 
 #include "main/app_ctx.h"
 #include "main/app_gui.h"
+#include "utils.h"
 
 static ImFont* g_guifontdefaut = nullptr;
 static ImFont* g_guifontlg     = nullptr;
@@ -70,9 +71,11 @@ void app_guibottom_menu(app_ctx_t* p_ctx) {
 
   // 1. Define your global scale factor
   float scl = 2.f;
+  ANDROID_ONLY({ scl *= 1.5; });
 
   // 2. Scale the base height of the bar
   float b_ht = 25.0f * scl;
+  ANDROID_ONLY({ b_ht *= 1.5; });
 
   ImGui::SetNextWindowPos(ImVec2(vp->WorkPos.x, vp->WorkPos.y + vp->WorkSize.y - b_ht));
   ImGui::SetNextWindowSize(ImVec2(vp->WorkSize.x, b_ht));
@@ -89,9 +92,17 @@ void app_guibottom_menu(app_ctx_t* p_ctx) {
   ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(5.0f, 0.0f) * scl);
   ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, st.ItemSpacing * scl);
 
-  // ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, st.FramePadding * scl);
   ImGui::PushStyleVar(ImGuiStyleVar_FramePadding,
                       ImVec2(st.FramePadding.x * scl, st.FramePadding.y * scl * 2.5f));
+
+  DESKTOP_ONLY({
+    ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing,
+                        ImVec2(st.ItemSpacing.x * scl, st.ItemSpacing.y * scl));
+  })
+  ANDROID_ONLY({
+    ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing,
+                        ImVec2(st.ItemSpacing.x * 2.0f, st.ItemSpacing.y * scl));
+  });
 
   if (ImGui::Begin("##BottomMenuBar", nullptr, w_flgs)) {
     // 5. Scale the font/text inside the window
@@ -101,7 +112,11 @@ void app_guibottom_menu(app_ctx_t* p_ctx) {
 
     if (ImGui::BeginMenuBar()) {
 
-      // this now to small
+      // Make this menu button on menu bar a bit to the right (important for android)
+      // ANDROID_ONLY({
+      // });
+      // ImGui::SetCursorPosX(ImGui::GetCursorPosX() + (30.0f * scl));
+
       if (ImGui::BeginMenu("Menu")) {
         if (ImGui::MenuItem("GUI Demo")) {
           g_guishow_demo = !g_guishow_demo;
@@ -128,8 +143,7 @@ void app_guibottom_menu(app_ctx_t* p_ctx) {
     ImGui::End();
   }
 
-  // 6. Pop the 4 style variables we pushed
-  ImGui::PopStyleVar(4);
+  ImGui::PopStyleVar(5);
 }
 
 /*
@@ -146,6 +160,8 @@ bool app_guisetup(app_ctx_t* p_ctx) {
   // Load an isolated large version (e.g., 26.0f instead of 13.0f)
   g_guifontlg        = io.Fonts->AddFontDefault(&cfg);
   g_guifontlg->Scale = 2.0f;
+
+  // ANDROID_ONLY({ g_guifontlg->Scale = 4.0f; });
 
   io.Fonts->Build();
 

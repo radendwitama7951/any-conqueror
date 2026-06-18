@@ -1,0 +1,12 @@
+# This is a generated file and its contents are an internal implementation detail.
+# The download step will be re-executed if anything in this file changes.
+# No other meaning or use of this file is supported.
+
+method=url
+command=/usr/bin/cmake;-DCMAKE_MESSAGE_LOG_LEVEL=VERBOSE;-P;/home/dwitama/Documents/devel/cpp/any-conqueror/android-project/app/.cxx/Debug/242d5n4i/arm64-v8a/CMakeFiles/fc-stamp/sdl3/download-sdl3.cmake;COMMAND;/usr/bin/cmake;-DCMAKE_MESSAGE_LOG_LEVEL=VERBOSE;-P;/home/dwitama/Documents/devel/cpp/any-conqueror/android-project/app/.cxx/Debug/242d5n4i/arm64-v8a/CMakeFiles/fc-stamp/sdl3/verify-sdl3.cmake;COMMAND;/usr/bin/cmake;-DCMAKE_MESSAGE_LOG_LEVEL=VERBOSE;-P;/home/dwitama/Documents/devel/cpp/any-conqueror/android-project/app/.cxx/Debug/242d5n4i/arm64-v8a/CMakeFiles/fc-stamp/sdl3/extract-sdl3.cmake
+source_dir=/home/dwitama/Documents/devel/cpp/any-conqueror/android-project/app/.cxx/Debug/242d5n4i/arm64-v8a/_deps/sdl3-src
+work_dir=/home/dwitama/Documents/devel/cpp/any-conqueror/android-project/app/.cxx/Debug/242d5n4i/arm64-v8a/_deps
+url(s)=https://github.com/libsdl-org/SDL/archive/refs/tags/release-3.4.8.tar.gz
+hash=
+      no_extract=
+

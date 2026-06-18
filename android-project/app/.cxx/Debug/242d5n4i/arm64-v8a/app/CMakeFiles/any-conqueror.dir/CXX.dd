@@ -1,0 +1,21 @@
+ninja_dyndep_version = 1.0
+build app/CMakeFiles/any-conqueror.dir/src/main/vkgui.cpp.o: dyndep
+
+build app/CMakeFiles/any-conqueror.dir/src/main/vma_impl.cpp.o: dyndep
+
+build app/CMakeFiles/any-conqueror.dir/src/main/app_gui.cpp.o: dyndep
+
+build app/CMakeFiles/any-conqueror.dir/__/_deps/imgui-src/imgui.cpp.o: dyndep
+
+build app/CMakeFiles/any-conqueror.dir/__/_deps/imgui-src/imgui_demo.cpp.o: dyndep
+
+build app/CMakeFiles/any-conqueror.dir/__/_deps/imgui-src/imgui_draw.cpp.o: dyndep
+
+build app/CMakeFiles/any-conqueror.dir/__/_deps/imgui-src/imgui_tables.cpp.o: dyndep
+
+build app/CMakeFiles/any-conqueror.dir/__/_deps/imgui-src/imgui_widgets.cpp.o: dyndep
+
+build app/CMakeFiles/any-conqueror.dir/__/_deps/imgui-src/backends/imgui_impl_sdl3.cpp.o: dyndep
+
+build app/CMakeFiles/any-conqueror.dir/__/_deps/imgui-src/backends/imgui_impl_vulkan.cpp.o: dyndep
+

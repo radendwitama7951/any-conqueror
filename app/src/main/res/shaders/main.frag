@@ -19,7 +19,8 @@ void main() {
 
   vec4 linear_color = tex_color * v_color;
 
-  vec3 srgb_color = pow(linear_color.rgb, vec3(1.0 / 2.2));
+  // vec3 srgb_color = pow(linear_color.rgb, vec3(1.0 / 2.2));
 
-  out_color = vec4(srgb_color, linear_color.a);
+  // out_color = vec4(srgb_color, linear_color.a);
+  out_color = linear_color;
 }

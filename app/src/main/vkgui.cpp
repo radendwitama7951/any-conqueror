@@ -61,13 +61,15 @@ bool app_vkgui_init() {
             "vkCreateDescriptorPool");
 
   // VkFormat img_fmt = VK_FORMAT_B8G8R8A8_UNORM;
+  // VkFormat img_fmt                             = VK_FORMAT_R8G8B8A8_SRGB;
   VkPipelineRenderingCreateInfoKHR plrender_ci = {
       .sType                   = VK_STRUCTURE_TYPE_PIPELINE_RENDERING_CREATE_INFO_KHR,
       .pNext                   = VK_NULL_HANDLE,
       .colorAttachmentCount    = 1,
       .pColorAttachmentFormats = &g_vkscimgfmt,
       .depthAttachmentFormat   = VK_FORMAT_UNDEFINED,
-      .stencilAttachmentFormat = VK_FORMAT_UNDEFINED};
+      .stencilAttachmentFormat = VK_FORMAT_UNDEFINED,
+  };
 
   IMGUI_CHECKVERSION();
   ImGui::CreateContext();
@@ -84,6 +86,18 @@ bool app_vkgui_init() {
   style.ScaleAllSizes(1);
   style.FontScaleDpi = 1;
 
+  ANDROID_ONLY({
+    style.ScaleAllSizes(2);
+    style.FontScaleDpi = 2;
+  });
+
+  for (size_t i = 0; i < ImGuiCol_COUNT; ++i) {
+    ImVec4* col = &style.Colors[i];
+    col->x      = SDL_powf(col->x, 2.2f);
+    col->y      = SDL_powf(col->y, 2.2f);
+    col->z      = SDL_powf(col->z, 2.2f);
+  }
+
   SDL_assert(g_vkimg_cnt >= 2);
 
   ImGui_ImplSDL3_InitForVulkan(g_pmainwdow);
@@ -98,6 +112,7 @@ bool app_vkgui_init() {
       .ImageCount     = g_vkimg_cnt,
       .PipelineInfoMain =
           {
+              .MSAASamples                 = VK_SAMPLE_COUNT_1_BIT,
               .PipelineRenderingCreateInfo = plrender_ci,
           },
       .Allocator           = VK_NULL_HANDLE,

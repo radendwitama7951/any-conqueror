@@ -13,6 +13,8 @@
 #include "systems.h"
 
 SDL_AppResult SDL_AppInit(void** pp_as, int argc, char* argv[]) {
+  app_init_logger();
+
   log_debug("[app] Hello world from %s!", APP_NAME);
 
   if (!SDL_SetAppMetadata("Project Any Conqueror", "1.0", "id.my.radengan.app")) {
@@ -33,14 +35,21 @@ SDL_AppResult SDL_AppInit(void** pp_as, int argc, char* argv[]) {
   wdowflags |= SDL_WINDOW_VULKAN;
 #endif  // APP_USE_VK
 
-  g_pmainwdow =
-      SDL_CreateWindow(APP_NAME, APP_MAIN_WINDOW_WIDTH, APP_MAIN_WINDOW_HEIGHT, wdowflags);
+  ANDROID_ONLY({
+    wdowflags |= SDL_WINDOW_HIGH_PIXEL_DENSITY | SDL_WINDOW_FULLSCREEN;
+
+    SDL_SetHint(SDL_HINT_ANDROID_TRAP_BACK_BUTTON, "1");
+  })
+
+  g_pmainwdow = SDL_CreateWindow(APP_NAME, APP_MAIN_WINDOW_INIT_WIDTH, APP_MAIN_WINDOW_INIT_HEIGHT,
+                                 wdowflags);
   if (g_pmainwdow == NULL) {
     log_error("[app] SDL_CreateWindow: %s", SDL_GetError());
     return SDL_APP_FAILURE;
   }
 
 #ifdef APP_USE_VK
+  app_chk(app_vkinit_allocator(), "app_vkinit_allocator");
   app_chk(app_vkinit_surface(), "app_vkinit_surface");
   app_chk(app_vkinit_swapchain(), "app_vkinit_swapchain");
   app_chk(app_vkinit_depthimg(), "app_vkinit_depthimg");
@@ -59,7 +68,8 @@ SDL_AppResult SDL_AppInit(void** pp_as, int argc, char* argv[]) {
 #endif  //APP_USE_VK
 
   g_appctx = (app_ctx_t){
-      .clrscr = {0.12156862745098039215f, 0.12156862745098039215f, 0.12156862745098039215f},
+      .clrscr = {APP_UTIL_COLOR_SRGB(0.12156862745098039215f, 0.12156862745098039215f,
+                                     0.12156862745098039215f)},
   };
 
   app_chk(app_guisetup(&g_appctx), "app_guisetup");
@@ -79,27 +89,58 @@ SDL_AppResult SDL_AppEvent(void* p_as, SDL_Event* p_ev) {
         return SDL_APP_SUCCESS;
       }
 
+    case SDL_EVENT_WINDOW_RESIZED: {
+
+#ifdef APP_USE_VK
+      g_vkupdate_sc = true;
+#endif  // APP_USE_VK
+
+      break;
+    }
+
+      // case SDL_EVENT_WINDOW_MINIMIZED:
+      // case SDL_EVENT_WINDOW_OCCLUDED:
+      // case SDL_EVENT_WINDOW_HIDDEN:
+      //   // g_app_renderable = false;
+      //   break;
+      //
+      // case SDL_EVENT_WINDOW_EXPOSED:
+      // case SDL_EVENT_WINDOW_SHOWN:
+      // case SDL_EVENT_WINDOW_RESTORED:
+      //   // g_app_renderable = true;
+      //   break;
+
     default:
       break;
   }
 
-  if (!app_guiwant_capture_mouse()) {
-    app_gameev_camera_control(p_ev);
-    app_gameev_unit_selection(p_ev);
-    app_gameev_unit_action(p_ev);
-  }
-
 #ifdef APP_USE_VK
+
+  if (g_vkupdate_sc)
+    app_chk(app_vkupdate_swapchain(), "app_vkupdate_swapchain");
+
   if (!app_vkhandle_event(p_ev)) {
     log_error("[app] app_vkhandle_event");
     return SDL_APP_FAILURE;
   }
 #endif  //APP_USE_VK
 
+  if (!app_guiwant_capture_mouse()) {
+    app_gameev_camera_control(p_ev);
+    app_gameev_unit_selection(p_ev);
+    app_gameev_unit_action(p_ev);
+  } else {
+    log_debug("[app] %s: hover imgui", __FUNCTION__);
+  }
+
   return SDL_APP_CONTINUE;
 }
 
 SDL_AppResult SDL_AppIterate(void* p_as) {
+  // if (!g_app_renderable) {
+  //   SDL_Delay(16);
+  //   return SDL_APP_CONTINUE;
+  // }
 
 #ifdef APP_USE_VK
   app_vkinit_frame_render_data();

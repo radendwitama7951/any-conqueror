@@ -1,0 +1,14 @@
+{
+	"backtraceGraph" : 
+	{
+		"commands" : [],
+		"files" : [],
+		"nodes" : []
+	},
+	"installers" : [],
+	"paths" : 
+	{
+		"build" : "_deps/vma-build",
+		"source" : "/home/dwitama/Documents/devel/cpp/any-conqueror/android-project/app/.cxx/Debug/242d5n4i/arm64-v8a/_deps/vma-src"
+	}
+}

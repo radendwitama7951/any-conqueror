@@ -1,0 +1,88 @@
+{
+  "buildFiles": [
+    "/home/dwitama/Documents/devel/cpp/any-conqueror/android-project/app/.cxx/Debug/242d5n4i/arm64-v8a/_deps/sdl3-src/CMakeLists.txt",
+    "/home/dwitama/Documents/devel/cpp/any-conqueror/android-project/app/.cxx/Debug/242d5n4i/arm64-v8a/_deps/vma-src/CMakeLists.txt",
+    "/home/dwitama/Documents/devel/cpp/any-conqueror/android-project/app/.cxx/Debug/242d5n4i/arm64-v8a/_deps/volk-src/CMakeLists.txt",
+    "/home/dwitama/Documents/devel/cpp/any-conqueror/android-project/app/jni/CMakeLists.txt",
+    "/home/dwitama/Documents/devel/cpp/any-conqueror/android-project/app/jni/app/CMakeLists.txt"
+  ],
+  "cleanCommandsComponents": [
+    [
+      "/usr/bin/ninja",
+      "-C",
+      "/home/dwitama/Documents/devel/cpp/any-conqueror/android-project/app/.cxx/Debug/242d5n4i/arm64-v8a",
+      "clean"
+    ]
+  ],
+  "buildTargetsCommandComponents": [
+    "/usr/bin/ninja",
+    "-C",
+    "/home/dwitama/Documents/devel/cpp/any-conqueror/android-project/app/.cxx/Debug/242d5n4i/arm64-v8a",
+    "{LIST_OF_TARGETS_TO_BUILD}"
+  ],
+  "libraries": {
+    "SDL3-shared::@405c074760d2f6728126": {
+      "toolchain": "toolchain",
+      "abi": "arm64-v8a",
+      "artifactName": "SDL3-shared",
+      "output": "/home/dwitama/Documents/devel/cpp/any-conqueror/android-project/app/build/intermediates/cxx/Debug/242d5n4i/obj/arm64-v8a/libSDL3.so",
+      "runtimeFiles": []
+    },
+    "SDL3_test::@405c074760d2f6728126": {
+      "toolchain": "toolchain",
+      "abi": "arm64-v8a",
+      "artifactName": "SDL3_test",
+      "output": "/home/dwitama/Documents/devel/cpp/any-conqueror/android-project/app/.cxx/Debug/242d5n4i/arm64-v8a/_deps/sdl3-build/libSDL3_test.a"
+    },
+    "SDL_uclibc::@405c074760d2f6728126": {
+      "toolchain": "toolchain",
+      "abi": "arm64-v8a",
+      "artifactName": "SDL_uclibc",
+      "output": "/home/dwitama/Documents/devel/cpp/any-conqueror/android-project/app/.cxx/Debug/242d5n4i/arm64-v8a/_deps/sdl3-build/libSDL_uclibc.a"
+    },
+    "any-conqueror::@5f5a17c01335469806cb": {
+      "toolchain": "toolchain",
+      "abi": "arm64-v8a",
+      "artifactName": "any-conqueror",
+      "output": "/home/dwitama/Documents/devel/cpp/any-conqueror/android-project/app/build/intermediates/cxx/Debug/242d5n4i/obj/arm64-v8a/libmain.so",
+      "runtimeFiles": [
+        "/home/dwitama/Documents/devel/cpp/any-conqueror/android-project/app/build/intermediates/cxx/Debug/242d5n4i/obj/arm64-v8a/libSDL3.so",
+        "/home/dwitama/Documents/devel/cpp/any-conqueror/android-project/app/.cxx/Debug/242d5n4i/arm64-v8a/_deps/ktx_android-src/arm64-v8a/lib/libktx.so"
+      ]
+    },
+    "any-conqueror-bundle-textures::@5f5a17c01335469806cb": {
+      "toolchain": "toolchain",
+      "abi": "arm64-v8a",
+      "artifactName": "any-conqueror-bundle-textures"
+    },
+    "any-conqueror-compile-shaders::@5f5a17c01335469806cb": {
+      "toolchain": "toolchain",
+      "abi": "arm64-v8a",
+      "artifactName": "any-conqueror-compile-shaders"
+    },
+    "any-conqueror-run::@5f5a17c01335469806cb": {
+      "toolchain": "toolchain",
+      "abi": "arm64-v8a",
+      "artifactName": "any-conqueror-run"
+    },
+    "volk::@2f990ff50bbcc7f22b46": {
+      "toolchain": "toolchain",
+      "abi": "arm64-v8a",
+      "artifactName": "volk",
+      "output": "/home/dwitama/Documents/devel/cpp/any-conqueror/android-project/app/.cxx/Debug/242d5n4i/arm64-v8a/_deps/volk-build/libvolk.a"
+    }
+  },
+  "toolchains": {
+    "toolchain": {
+      "cCompilerExecutable": "/home/dwitama/Documents/devel/android/Android/sdk/ndk/29.0.13846066/toolchains/llvm/prebuilt/linux-x86_64/bin/clang.lld",
+      "cppCompilerExecutable": "/home/dwitama/Documents/devel/android/Android/sdk/ndk/29.0.13846066/toolchains/llvm/prebuilt/linux-x86_64/bin/clang++.lld"
+    }
+  },
+  "cFileExtensions": [
+    "c"
+  ],
+  "cppFileExtensions": [
+    "cxx",
+    "cpp"
+  ]
+}

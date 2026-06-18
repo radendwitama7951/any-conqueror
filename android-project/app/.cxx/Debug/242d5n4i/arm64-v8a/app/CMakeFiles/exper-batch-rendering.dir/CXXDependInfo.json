@@ -1,0 +1,82 @@
+{
+	"bmi-installation" : null,
+	"compiler-frontend-variant" : "GNU",
+	"compiler-id" : "Clang",
+	"compiler-simulate-id" : "",
+	"config" : "Debug",
+	"cxx-modules" : {},
+	"database-info" : null,
+	"dir-cur-bld" : "/home/dwitama/Documents/devel/cpp/any-conqueror/android-project/app/.cxx/Debug/242d5n4i/arm64-v8a/app",
+	"dir-cur-src" : "/home/dwitama/Documents/devel/cpp/any-conqueror/android-project/app/jni/app",
+	"dir-top-bld" : "/home/dwitama/Documents/devel/cpp/any-conqueror/android-project/app/.cxx/Debug/242d5n4i/arm64-v8a",
+	"dir-top-src" : "/home/dwitama/Documents/devel/cpp/any-conqueror/android-project/app/jni",
+	"exports" : [],
+	"forward-modules-from-target-dirs" : [],
+	"include-dirs" : 
+	[
+		"/home/dwitama/Documents/devel/cpp/any-conqueror/android-project/app/jni/app/src",
+		"/home/dwitama/Documents/devel/cpp/any-conqueror/android-project/app/jni/app/extern/rxi_log/src",
+		"_deps/ktx_android-src/arm64-v8a/include",
+		"_deps/imgui-src",
+		"_deps/sdl3-build/include-revision",
+		"_deps/sdl3-src/include",
+		"_deps/volk-src",
+		"_deps/vma-src/include"
+	],
+	"language" : "CXX",
+	"linked-target-dirs" : [],
+	"module-dir" : "/home/dwitama/Documents/devel/cpp/any-conqueror/android-project/app/.cxx/Debug/242d5n4i/arm64-v8a/app/CMakeFiles/exper-batch-rendering.dir",
+	"sources" : 
+	{
+		"app/CMakeFiles/exper-batch-rendering.dir/__/_deps/imgui-src/backends/imgui_impl_sdl3.cpp.o" : 
+		{
+			"language" : "CXX",
+			"source" : "/home/dwitama/Documents/devel/cpp/any-conqueror/android-project/app/.cxx/Debug/242d5n4i/arm64-v8a/_deps/imgui-src/backends/imgui_impl_sdl3.cpp"
+		},
+		"app/CMakeFiles/exper-batch-rendering.dir/__/_deps/imgui-src/backends/imgui_impl_vulkan.cpp.o" : 
+		{
+			"language" : "CXX",
+			"source" : "/home/dwitama/Documents/devel/cpp/any-conqueror/android-project/app/.cxx/Debug/242d5n4i/arm64-v8a/_deps/imgui-src/backends/imgui_impl_vulkan.cpp"
+		},
+		"app/CMakeFiles/exper-batch-rendering.dir/__/_deps/imgui-src/imgui.cpp.o" : 
+		{
+			"language" : "CXX",
+			"source" : "/home/dwitama/Documents/devel/cpp/any-conqueror/android-project/app/.cxx/Debug/242d5n4i/arm64-v8a/_deps/imgui-src/imgui.cpp"
+		},
+		"app/CMakeFiles/exper-batch-rendering.dir/__/_deps/imgui-src/imgui_demo.cpp.o" : 
+		{
+			"language" : "CXX",
+			"source" : "/home/dwitama/Documents/devel/cpp/any-conqueror/android-project/app/.cxx/Debug/242d5n4i/arm64-v8a/_deps/imgui-src/imgui_demo.cpp"
+		},
+		"app/CMakeFiles/exper-batch-rendering.dir/__/_deps/imgui-src/imgui_draw.cpp.o" : 
+		{
+			"language" : "CXX",
+			"source" : "/home/dwitama/Documents/devel/cpp/any-conqueror/android-project/app/.cxx/Debug/242d5n4i/arm64-v8a/_deps/imgui-src/imgui_draw.cpp"
+		},
+		"app/CMakeFiles/exper-batch-rendering.dir/__/_deps/imgui-src/imgui_tables.cpp.o" : 
+		{
+			"language" : "CXX",
+			"source" : "/home/dwitama/Documents/devel/cpp/any-conqueror/android-project/app/.cxx/Debug/242d5n4i/arm64-v8a/_deps/imgui-src/imgui_tables.cpp"
+		},
+		"app/CMakeFiles/exper-batch-rendering.dir/__/_deps/imgui-src/imgui_widgets.cpp.o" : 
+		{
+			"language" : "CXX",
+			"source" : "/home/dwitama/Documents/devel/cpp/any-conqueror/android-project/app/.cxx/Debug/242d5n4i/arm64-v8a/_deps/imgui-src/imgui_widgets.cpp"
+		},
+		"app/CMakeFiles/exper-batch-rendering.dir/src/main/app_gui.cpp.o" : 
+		{
+			"language" : "CXX",
+			"source" : "/home/dwitama/Documents/devel/cpp/any-conqueror/android-project/app/jni/app/src/main/app_gui.cpp"
+		},
+		"app/CMakeFiles/exper-batch-rendering.dir/src/main/vkgui.cpp.o" : 
+		{
+			"language" : "CXX",
+			"source" : "/home/dwitama/Documents/devel/cpp/any-conqueror/android-project/app/jni/app/src/main/vkgui.cpp"
+		},
+		"app/CMakeFiles/exper-batch-rendering.dir/src/main/vma_impl.cpp.o" : 
+		{
+			"language" : "CXX",
+			"source" : "/home/dwitama/Documents/devel/cpp/any-conqueror/android-project/app/jni/app/src/main/vma_impl.cpp"
+		}
+	}
+}

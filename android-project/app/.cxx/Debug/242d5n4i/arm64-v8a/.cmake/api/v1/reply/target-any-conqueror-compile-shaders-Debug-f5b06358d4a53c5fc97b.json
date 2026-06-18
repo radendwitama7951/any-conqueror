@@ -1,0 +1,35 @@
+{
+	"backtrace" : 1,
+	"backtraceGraph" : 
+	{
+		"commands" : 
+		[
+			"add_custom_target"
+		],
+		"files" : 
+		[
+			"app/CMakeLists.txt"
+		],
+		"nodes" : 
+		[
+			{
+				"file" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 195,
+				"parent" : 0
+			}
+		]
+	},
+	"id" : "any-conqueror-compile-shaders::@5f5a17c01335469806cb",
+	"name" : "any-conqueror-compile-shaders",
+	"paths" : 
+	{
+		"build" : "app",
+		"source" : "app"
+	},
+	"sources" : [],
+	"type" : "UTILITY"
+}

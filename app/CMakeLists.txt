@@ -24,12 +24,24 @@ FetchContent_Declare(
 )
 FetchContent_MakeAvailable(vma)
 
+if (ANDROID)
+include(FetchContent)
+FetchContent_Declare(
+  ktx_android
+  URL https://github.com/KhronosGroup/KTX-Software/releases/download/v4.4.2/KTX-Software-4.4.2-Android.zip
+  URL_HASH SHA256=9f84a395f37a185e2e21e77cfd3893e67271b616edf5feb39125f09ab4c06b29
+)
+FetchContent_MakeAvailable(ktx_android)
+elseif(LINUX)
 include(FetchContent)
 FetchContent_Declare(
   ktx_linux_x86_64
   URL https://github.com/KhronosGroup/KTX-Software/releases/download/v4.4.2/KTX-Software-4.4.2-Linux-x86_64.tar.bz2
   URL_HASH SHA256=a8781bad05f9624edbf910b7f258cd0a4ba7d3e63b49ecc0a0ab440bf6a0a245)
 FetchContent_MakeAvailable(ktx_linux_x86_64)
+endif()
+
+
 
 if(NOT EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/extern/rxi_log/)
   FetchContent_Declare(
@@ -115,13 +127,14 @@ target_sources(
     ${CMAKE_CURRENT_SOURCE_DIR}/src/
     ${CMAKE_CURRENT_SOURCE_DIR}/extern/rxi_log/src/
     $<$<PLATFORM_ID:Linux>:${ktx_linux_x86_64_SOURCE_DIR}/include>
+    $<$<PLATFORM_ID:Android>:${ktx_android_SOURCE_DIR}/arm64-v8a/include>
     ${imgui_SOURCE_DIR}
 )
 
 target_compile_definitions(
   ${APP} 
     PRIVATE APP_NAME="${APP}"
-            APP_ASSETS_SOURCE_DIR="${APP_ASSETS_SOURCE_DIR}/"
+            APP_ASSETS_SOURCE_DIR="$<IF:$<PLATFORM_ID:Android>,,${APP_ASSETS_SOURCE_DIR}/>"
             LOG_USE_COLOR 
             APP_USE_VK 
             IMGUI_IMPL_VULKAN_USE_VOLK
@@ -139,6 +152,7 @@ target_link_libraries(
             SDL3::SDL3 volk::volk_headers VulkanMemoryAllocator
             $<$<PLATFORM_ID:Android>:log>
             $<$<PLATFORM_ID:Linux>:${ktx_linux_x86_64_SOURCE_DIR}/lib/libktx.so>
+            $<$<PLATFORM_ID:Android>:${ktx_android_SOURCE_DIR}/arm64-v8a/lib/libktx.so>
 )
 
 add_custom_target(
@@ -208,7 +222,7 @@ foreach(i RANGE ${COUNT_MINUS_ONE})
     OUTPUT ${OUT_FILE} #
     COMMAND ${CMAKE_COMMAND} -E make_directory
             ${APP_ASSETS_TEXTURES_SOURCE_DIR}/
-    COMMAND ${TOKTX_EXE} 
+    COMMAND ${TOKTX_EXE}
     --t2 
     --genmipmap 
     --encode uastc   # <-- it's works with this commented

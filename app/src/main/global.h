@@ -9,12 +9,24 @@
 #include "app_ctx.h"
 
 #define APP_MAIN_WINDOW_SCALE 1.f
-#define APP_MAIN_WINDOW_WIDTH (1920 * APP_MAIN_WINDOW_SCALE)
-#define APP_MAIN_WINDOW_HEIGHT (1080 * APP_MAIN_WINDOW_SCALE)
+#ifdef __ANDROID__
+#define APP_MAIN_WINDOW_INIT_WIDTH (2340 * APP_MAIN_WINDOW_SCALE)
+#define APP_MAIN_WINDOW_INIT_HEIGHT (1080 * APP_MAIN_WINDOW_SCALE)
+#else
+#define APP_MAIN_WINDOW_INIT_WIDTH (1920 * APP_MAIN_WINDOW_SCALE)
+#define APP_MAIN_WINDOW_INIT_HEIGHT (1080 * APP_MAIN_WINDOW_SCALE)
+#endif  //
 
 SDL_Window* g_pmainwdow;
+int g_mainwdoww = (APP_MAIN_WINDOW_INIT_WIDTH);
+int g_mainwdowh = (APP_MAIN_WINDOW_INIT_HEIGHT);
 
 app_ctx_t g_appctx;
+
+bool g_app_renderable = false;
+
+#define APP_MAIN_WINDOW_WIDTH (g_mainwdoww)
+#define APP_MAIN_WINDOW_HEIGHT (g_mainwdowh)
 
 /*
  * GAME
@@ -92,11 +104,13 @@ typedef struct {
 #define APP_GAME_CAMERA_DATA_SZ sizeof(app_game_camera_data_t)
 
 static app_game_camera_data_t g_game_cam = {
-    .posx  = 0,  // -APP_MAIN_WINDOW_WIDTH / 2.f,  // MOVE CAMERA ANCHOR TO TOP LEFT
+    .posx = 0,
+    // + ((2340 - 1920) / 2.f),
+    //                 2.f),  // -APP_MAIN_WINDOW_WIDTH / 2.f,  // MOVE CAMERA ANCHOR TO TOP LEFT
     .posy  = 0,  // -APP_MAIN_WINDOW_HEIGHT / 2.f,
     .zoom  = 1.f,
-    .resow = APP_MAIN_WINDOW_WIDTH,
-    .resoh = APP_MAIN_WINDOW_HEIGHT,
+    .resow = APP_MAIN_WINDOW_INIT_WIDTH,
+    .resoh = APP_MAIN_WINDOW_INIT_HEIGHT,
 };
 
 #define APP_GAME_TILE_RADIUS_SCALE (1.0 / 2.f)

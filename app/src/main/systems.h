@@ -132,6 +132,15 @@ bool app_vkinit_device() {
   app_vkchk(vkCreateDevice(g_vkphydevs[g_vkphydev_idx], &dev_ci, NULL, &g_vkdev), "vkCreateDevice");
   vkGetDeviceQueue(g_vkdev, g_vkq_fam, 0, &g_vkqueue);
 
+  return true;
+}
+
+/*
+ *
+ * app_vkinit_allocator
+ *
+ * */
+bool app_vkinit_allocator() {
   // INIT VMA
   VmaVulkanFunctions vma_vk_fn = {
       .vkGetInstanceProcAddr               = vkGetInstanceProcAddr,
@@ -177,6 +186,9 @@ bool app_vkinit_device() {
 bool app_vkinit_surface() {
 
   // CREATE SURFACE AND GET WINDOW SIZE
+  app_chk(SDL_GetWindowSize(g_pmainwdow, &g_mainwdoww, &g_mainwdowh), SDL_GetError());
+  log_info("SDL window size: %dpx x %dpx", APP_MAIN_WINDOW_WIDTH, APP_MAIN_WINDOW_HEIGHT);
+
   app_chk(SDL_Vulkan_CreateSurface(g_pmainwdow, g_vkinst, NULL, &g_vksurface), SDL_GetError());
   // app_chk(SDL_GetWindowSize(g_pmainwdow, APP_MAIN_WINDOW_WIDTH, APP_MAIN_WINDOW_HEIGHT), SDL_GetError());
   log_info("SDL window size: %dpx x %dpx", APP_MAIN_WINDOW_WIDTH, APP_MAIN_WINDOW_HEIGHT);
@@ -200,8 +212,15 @@ bool app_vkinit_swapchain() {
                            .height = (uint32_t)APP_MAIN_WINDOW_HEIGHT};
   }
   // g_vkimg_fmt = VK_FORMAT_B8G8R8A8_SRGB; // ImGUI color would off
-  g_vkimg_fmt = VK_FORMAT_B8G8R8A8_UNORM;  // Change to this because ImGUI
-  g_vksc_ci   = (VkSwapchainCreateInfoKHR){
+
+  g_vkimg_fmt = VK_FORMAT_B8G8R8A8_SRGB;  // Change to this because ImGUI (desktop)
+
+  ANDROID_ONLY({
+    // g_vkimg_fmt = VK_FORMAT_R8G8B8A8_UNORM;
+    g_vkimg_fmt =
+        VK_FORMAT_R8G8B8A8_SRGB;  // Change to this doesn't effect ImGUI on android. It's still too bright
+  })
+  g_vksc_ci = (VkSwapchainCreateInfoKHR){
       .sType            = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR,
       .surface          = g_vksurface,
       .minImageCount    = g_vksurface_capas.minImageCount,
@@ -460,7 +479,12 @@ bool app_vkinit_pipeline() {
       },
   };
 
-  // fovsjvo
+  VkDynamicState dyn_state_opts[] = {VK_DYNAMIC_STATE_VIEWPORT, VK_DYNAMIC_STATE_SCISSOR};
+  VkPipelineDynamicStateCreateInfo dyn_state = {
+      .sType             = VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO,
+      .dynamicStateCount = 2,
+      .pDynamicStates    = dyn_state_opts,
+  };
 
   VkPipelineVertexInputStateCreateInfo vi_state = {
       .sType                           = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO,
@@ -493,9 +517,9 @@ bool app_vkinit_pipeline() {
   VkPipelineViewportStateCreateInfo vp_state = {
       .sType         = VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO,
       .viewportCount = 1,
-      .pViewports    = &vp,
-      .scissorCount  = 1,
-      .pScissors     = &scis,
+      // .pViewports    = &vp,
+      .scissorCount = 1,
+      // .pScissors     = &scis,
   };
 
   VkPipelineRasterizationStateCreateInfo ras_state = {
@@ -562,6 +586,7 @@ bool app_vkinit_pipeline() {
       .pMultisampleState   = &ms_state,
       .pColorBlendState    = &colb_state,
       .pDepthStencilState  = &desten_state,
+      .pDynamicState       = &dyn_state,
       .renderPass          = VK_NULL_HANDLE,
       .layout              = g_vkmainpllayout,
   };
@@ -899,7 +924,12 @@ bool app_vkinit_tex_assets() {
       log_debug("[app] ptex: need transcode %s", APP_GAME_TEXTURE_ARRAY_SOURCE_PATH[i]);
       ktx_transcode_fmt_e tcodefmt = KTX_TTF_BC7_RGBA;
 
-      KTX_error_code tcodeec       = ktxTexture2_TranscodeBasis(ptex, tcodefmt, 0);
+      ANDROID_ONLY({
+        tcodefmt = KTX_TTF_ASTC_4x4_RGBA;
+        log_debug("[app] Android detected: Transcoding to ASTC 4x4");
+      })
+
+      KTX_error_code tcodeec = ktxTexture2_TranscodeBasis(ptex, tcodefmt, 0);
 
       if (tcodeec != KTX_SUCCESS) {
         log_error("[app] Failed to transcode UASTC texture: %s:%s",
@@ -922,7 +952,7 @@ bool app_vkinit_tex_assets() {
         .arrayLayers   = ptex->numLayers,
         .samples       = VK_SAMPLE_COUNT_1_BIT,
         .tiling        = VK_IMAGE_TILING_OPTIMAL,
-        .usage         = VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT,
+        .usage         = VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT,
         .initialLayout = VK_IMAGE_LAYOUT_UNDEFINED,
     };
 
@@ -935,7 +965,7 @@ bool app_vkinit_tex_assets() {
         .sType    = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO,
         .image    = g_vkmain_game_texs[i].img,
         .viewType = VK_IMAGE_VIEW_TYPE_2D_ARRAY,
-        .format   = img_ci.format,
+        .format   = ptex->vkFormat,  // img_ci.format,
         // .format = VK_FORMAT_BC7_RGBA_SRGB_BLOCK,
         .subresourceRange =
             {
@@ -1146,6 +1176,74 @@ bool app_vkhandle_event(SDL_Event* p_ev) {
   return true;
 }
 
+bool app_vkupdate_swapchain() {
+
+  int wdoww = 0;
+  int wdowh = 0;
+
+  if (!SDL_GetWindowSize(g_pmainwdow, &wdoww, &wdowh)) {
+    log_error("[app] %s: SDL_GetWindowSize: %s", SDL_GetError());
+    return false;
+  }
+
+  log_debug("[app] %s: Handling swapchain update wdoww=%d wdowh=%d", __FUNCTION__, wdoww, wdowh);
+
+  g_vkupdate_sc = false;
+  app_vkchk(vkDeviceWaitIdle(g_vkdev), "vkDeviceWaitIdle");
+
+  app_vkchk(vkGetPhysicalDeviceSurfaceCapabilitiesKHR(g_vkphydevs[g_vkphydev_idx], g_vksurface,
+                                                      &g_vksurface_capas),
+            "vkGetPhysicalDeviceSurfaceCapabilitiesKHR");
+
+  g_vksc_ci.oldSwapchain = g_vksc;
+  g_vksc_ci.imageExtent  = (VkExtent2D){
+      .width  = (uint32_t)wdoww,
+      .height = (uint32_t)wdowh,
+  };
+
+  app_vkchk(vkCreateSwapchainKHR(g_vkdev, &g_vksc_ci, NULL, &g_vksc), "vkCreateSwapchainKHR");
+
+  for (size_t i = 0; i < g_vkimg_cnt; ++i) {
+    vkDestroyImageView(g_vkdev, g_vksc_img_views[i], NULL);
+  }
+  app_vkchk(vkGetSwapchainImagesKHR(g_vkdev, g_vksc, &g_vkimg_cnt, NULL),
+            "vkGetSwapchainImagesKHR");
+
+  SDL_assert(g_vkimg_cnt < APP_VK_SC_IMGS_CAP);
+  // g_vksc_imgs
+  //   .resize(imageCount);
+  app_vkchk(vkGetSwapchainImagesKHR(g_vkdev, g_vksc, &g_vkimg_cnt, g_vksc_imgs),
+            "vkGetSwapchainImagesKHR");
+
+  // swapchainImageViews.resize(imageCount);
+  for (size_t i = 0; i < g_vkimg_cnt; ++i) {
+    VkImageViewCreateInfo imgview_ci = {
+        .sType    = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO,
+        .image    = g_vksc_imgs[i],
+        .viewType = VK_IMAGE_VIEW_TYPE_2D,
+        .format   = g_vkimg_fmt,
+        .subresourceRange =
+            {
+                .aspectMask = VK_IMAGE_ASPECT_COLOR_BIT,
+                .levelCount = 1,
+                .layerCount = 1,
+            },
+    };
+    app_vkchk(vkCreateImageView(g_vkdev, &imgview_ci, NULL, &g_vksc_img_views[i]),
+              "vkCreateImageView");
+  }
+  vkDestroySwapchainKHR(g_vkdev, g_vksc_ci.oldSwapchain, NULL);
+
+  g_game_cam.resow = wdoww;
+  g_game_cam.resoh = wdowh;
+  g_game_cam.zoom  = 2;
+
+  g_mainwdoww      = wdoww;
+  g_mainwdowh      = wdowh;
+
+  return true;
+}
+
 /*
  * RENDER
  * app_vkbegin_render 
@@ -1160,7 +1258,7 @@ bool app_vkbegin_render() {
 
   app_vkchk_sc(vkAcquireNextImageKHR(g_vkdev, g_vksc, UINT64_MAX, g_vkpresent_sems[g_vkframe_idx],
                                      VK_NULL_HANDLE, &g_vkimg_idx),
-               &g_vkupdate_sc);
+               g_vkupdate_sc);
 
   // BEGIN RENDER COMMAND
   VkCommandBuffer cb = g_vkcb[g_vkframe_idx];
@@ -1183,11 +1281,11 @@ bool app_vkbegin_render() {
       .image         = g_vksc_imgs[g_vkimg_idx],  // <-- swapchain images
       .subresourceRange =
           {
-              .aspectMask     = VK_IMAGE_ASPECT_COLOR_BIT,
-              .baseMipLevel   = 0,
-              .levelCount     = 1,
-              .baseArrayLayer = 0,
-              .layerCount     = 1,
+              .aspectMask = VK_IMAGE_ASPECT_COLOR_BIT,
+              // .baseMipLevel   = 0,
+              .levelCount = 1,
+              // .baseArrayLayer = 0,
+              .layerCount = 1,
           },
   };
 
@@ -1230,6 +1328,22 @@ bool app_vkbegin_render() {
 
   // BEGIN RENDER
   vkCmdBeginRendering(cb, &ri);
+  VkViewport vp = {
+      .width    = (float)(APP_MAIN_WINDOW_WIDTH),
+      .height   = (float)(APP_MAIN_WINDOW_HEIGHT),
+      .minDepth = 0.0f,
+      .maxDepth = 1.0f,
+  };
+  vkCmdSetViewport(cb, 0, 1, &vp);
+  VkRect2D scissor = {
+      .extent =
+          {
+              .width  = (uint32_t)(APP_MAIN_WINDOW_WIDTH),
+              .height = (uint32_t)(APP_MAIN_WINDOW_HEIGHT),
+          },
+  };
+  vkCmdSetScissor(cb, 0, 1, &scissor);
+
   app_vkgui_begin();
 
   // vkCmdDraw(cb, 3, 1, 0, 0);
@@ -1273,7 +1387,7 @@ bool app_vkbegin_render() {
       .pSwapchains        = &g_vksc,
       .pImageIndices      = &g_vkimg_idx,
   };
-  app_vkchk_sc(vkQueuePresentKHR(g_vkqueue, &pi), "vkQueuePresentKHR");
+  app_vkchk_sc(vkQueuePresentKHR(g_vkqueue, &pi), g_vkupdate_sc);
 
   return true;
 }
@@ -1348,31 +1462,57 @@ bool app_gameev_camera_control(const SDL_Event* p_ev) {
   const float camx        = g_game_cam.posx;
   const float camy        = g_game_cam.posy;
 
-  if (p_ev->type == SDL_EVENT_MOUSE_BUTTON_DOWN) {
-    isdragging = true;
-    lastmousex = p_ev->button.x;
-    lastmousey = p_ev->button.y;
-  } else if (p_ev->type == SDL_EVENT_MOUSE_BUTTON_UP) {
-    isdragging = false;
-  } else if (p_ev->type == SDL_EVENT_MOUSE_MOTION && isdragging) {
-    const float dx = (p_ev->motion.x - lastmousex) / zoom;
-    const float dy = (p_ev->motion.y - lastmousey) / zoom;
+  DESKTOP_ONLY({
+    if (p_ev->type == SDL_EVENT_MOUSE_BUTTON_DOWN) {
+      isdragging = true;
+      lastmousex = p_ev->button.x;
+      lastmousey = p_ev->button.y;
 
-    g_game_cam.posx -= dx;
-    g_game_cam.posy -= dy;
+    } else if (p_ev->type == SDL_EVENT_MOUSE_BUTTON_UP) {
+      isdragging = false;
+    } else if (p_ev->type == SDL_EVENT_MOUSE_MOTION && isdragging) {
+      const float dx = (p_ev->motion.x - lastmousex) / zoom;
+      const float dy = (p_ev->motion.y - lastmousey) / zoom;
 
-    lastmousex = p_ev->motion.x;
-    lastmousey = p_ev->motion.y;
-  } else if (p_ev->type == SDL_EVENT_KEY_DOWN) {
-    switch (p_ev->key.key) {
-      case SDLK_LEFT: {
-        g_game_cam.posx -= APP_GAME_TILE_SPACE_HORIZ;
-      } break;
-      case SDLK_RIGHT: {
-        g_game_cam.posx -= APP_GAME_TILE_SPACE_HORIZ;
-      } break;
+      g_game_cam.posx -= dx;
+      g_game_cam.posy -= dy;
+
+      lastmousex = p_ev->motion.x;
+      lastmousey = p_ev->motion.y;
+
+    } else if (p_ev->type == SDL_EVENT_KEY_DOWN) {
+      switch (p_ev->key.key) {
+        case SDLK_LEFT: {
+          g_game_cam.posx -= APP_GAME_TILE_SPACE_HORIZ;
+        } break;
+        case SDLK_RIGHT: {
+          g_game_cam.posx -= APP_GAME_TILE_SPACE_HORIZ;
+        } break;
+      }
     }
-  }
+  });
+
+  ANDROID_ONLY({
+    static int finger_count = 0;
+
+    if (p_ev->type == SDL_EVENT_FINGER_DOWN) {
+      finger_count = 1;
+    } else if (p_ev->type == SDL_EVENT_FINGER_UP) {
+      finger_count = 0;
+      if (finger_count < 0)
+        finger_count = 0;
+    } else if (p_ev->type == SDL_EVENT_FINGER_MOTION) {
+      // 1-Finger: Pan the camera
+      if (finger_count == 1) {
+        // Convert normalized coordinates (0.0 to 1.0) to screen pixels
+        float pixel_dx = p_ev->tfinger.dx * APP_MAIN_WINDOW_WIDTH;
+        float pixel_dy = p_ev->tfinger.dy * APP_MAIN_WINDOW_HEIGHT;
+
+        g_game_cam.posx -= pixel_dx / zoom;
+        g_game_cam.posy -= pixel_dy / zoom;
+      }
+    }
+  });
 
   /* KEYBOARD ZOOM LOGIC */
   DESKTOP_ONLY({
@@ -1399,6 +1539,7 @@ bool app_gameev_camera_control(const SDL_Event* p_ev) {
  * - Update g_game_cam.zoom within the render loop using the derived scale factor.
  * - Ensure coordinate mapping for multi-touch uses SDL3 fingerId tracking.
  */
+
   ANDROID_ONLY({
     static struct {
       float x;
@@ -1432,7 +1573,7 @@ bool app_gameev_camera_control(const SDL_Event* p_ev) {
 
       float dx       = fingers[0].x - fingers[1].x;
       float dy       = fingers[0].y - fingers[1].y;
-      start_distance = sqrt(dx * dx + dy * dy);
+      start_distance = SDL_sqrt(dx * dx + dy * dy);
 
       log_debug("[app] fingers is_pinching: start_distance %f ", start_distance);
     }
@@ -1440,7 +1581,7 @@ bool app_gameev_camera_control(const SDL_Event* p_ev) {
     if (is_pinching && fingers[0].active && fingers[1].active) {
       float dx           = fingers[0].x - fingers[1].x;
       float dy           = fingers[0].y - fingers[1].y;
-      float cur_distance = sqrtf(dx * dx + dy * dy);
+      float cur_distance = SDL_sqrtf(dx * dx + dy * dy);
 
       log_debug("[app] fingers start zoom: cur_distance %f ", cur_distance);
       // Prevent division by zero
@@ -1481,8 +1622,11 @@ bool app_gameev_unit_selection(const SDL_Event* p_ev) {
   static float finaly     = 0;
 
   const float zoom_factor = g_game_cam.zoom;  // Use it so mousex and mousey still align
+
   const float scrcenterx  = (g_game_cam.resow / 2.f);
   const float scrcentery  = (g_game_cam.resoh / 2.f);
+
+  const float pillarboxx  = ((APP_MAIN_WINDOW_INIT_WIDTH - 1920) / 2.f);
 
   const float offsetx     = p_ev->button.x - scrcenterx;
   const float offsety     = p_ev->button.y - scrcentery;
@@ -1490,10 +1634,10 @@ bool app_gameev_unit_selection(const SDL_Event* p_ev) {
   log_debug("[app] offsetx: %.2f", offsetx);
   log_debug("[app] offsety: %.2f", offsety);
 
-  const float worldx =
-      ((offsetx / zoom_factor) + scrcenterx + g_game_cam.posx) - APP_GAME_TILE_RADIUS;
+  const float worldx = ((offsetx / zoom_factor) + scrcenterx + (g_game_cam.posx - pillarboxx)) -
+                       APP_GAME_TILE_RADIUS;
   const float worldy =
-      ((offsety / zoom_factor) + scrcentery + (g_game_cam.posy)) + APP_GAME_TILE_INRADIUS;
+      ((offsety / zoom_factor) + scrcentery + g_game_cam.posy) + APP_GAME_TILE_INRADIUS;
 
   log_debug("[app] worldx: %.2f", worldx);
   log_debug("[app] worldy: %.2f", worldy);
